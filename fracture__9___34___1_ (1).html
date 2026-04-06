@@ -1,0 +1,3196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running the Ghost — A Cartography of the Severed Script</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f1ea;
+    --paper-warm: #ebe6dc;
+    --paper-deep: #e2dccf;
+    --ink: #1a1814;
+    --ink-soft: #3d3832;
+    --ink-mute: #6b645a;
+    --rule: #c9c2b3;
+    --rule-soft: #dbd5c5;
+    --fracture: #d4541c;
+    --fracture-deep: #a33d10;
+    --fracture-pale: rgba(212, 84, 28, 0.08);
+    --gold: #b8873f;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html {
+    scroll-behavior: smooth;
+    /* Bump root font-size so every rem-based size (which is nearly everything
+       in this document) scales up by ~12.5% without touching individual rules. */
+    font-size: 112.5%;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(139, 115, 85, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(139, 115, 85, 0.03) 0%, transparent 40%);
+    z-index: 1;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    z-index: 2;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0 0.07 0 0 0 0.08 0'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: var(--fracture);
+    z-index: 100;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  .masthead {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    z-index: 50;
+    mix-blend-mode: multiply;
+  }
+
+  .masthead .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--fracture);
+    border-radius: 50%;
+    margin: 0 0.5rem;
+    vertical-align: middle;
+  }
+
+  /* SECTION NAV — sits directly beneath the masthead */
+  .section-nav {
+    position: fixed;
+    top: 3rem;
+    left: 0;
+    right: 0;
+    z-index: 49;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    padding: 0.55rem 2rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .section-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .section-nav-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.8rem;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 1300px) {
+    .section-nav-inner {
+      flex-wrap: nowrap;
+      min-width: max-content;
+    }
+  }
+
+  .section-nav a {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    text-decoration: none;
+    padding: 0.35rem 0;
+    border-bottom: 1.5px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .section-nav a:hover {
+    color: var(--ink);
+  }
+
+  .section-nav a.active {
+    color: var(--fracture);
+    border-bottom-color: var(--fracture);
+  }
+
+  .section-nav a .num {
+    color: var(--ink-mute);
+    margin-right: 0.5em;
+    font-weight: 400;
+  }
+
+  .section-nav a.active .num {
+    color: var(--fracture);
+  }
+
+  @media (max-width: 768px) {
+    .section-nav {
+      padding: 0.5rem 1rem;
+    }
+    .section-nav-inner {
+      justify-content: flex-start;
+      gap: 1.2rem;
+    }
+    .section-nav a {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+    }
+  }
+
+  section {
+    position: relative;
+    z-index: 3;
+    padding: 8rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    scroll-margin-top: 5.5rem;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .hero .kicker {
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--fracture);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.2s forwards;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(4rem, 12vw, 11rem);
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.4s forwards;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--fracture);
+    font-weight: 300;
+  }
+
+  .hero .deck {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.3rem, 2vw, 1.7rem);
+    line-height: 1.35;
+    color: var(--ink-soft);
+    max-width: 32ch;
+    margin-bottom: 4rem;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.7s forwards;
+  }
+
+  .hero .deck em { font-style: italic; color: var(--fracture); }
+
+  .hero .byline {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1s forwards;
+    flex-wrap: wrap;
+  }
+
+  .hero .byline .rule {
+    width: 40px;
+    height: 1px;
+    background: var(--ink-mute);
+  }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    opacity: 0;
+    animation: fadeUp 1.2s ease 1.4s forwards, bounce 2s ease infinite 2.4s;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  /* TYPOGRAPHY */
+  .section-num {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--fracture);
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2rem, 4.5vw, 3.8rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 2rem;
+    max-width: 20ch;
+    font-variation-settings: "opsz" 144;
+  }
+
+  h2 em {
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .prose {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+    line-height: 1.65;
+    color: var(--ink-soft);
+    max-width: 58ch;
+    font-weight: 400;
+  }
+
+  .prose p + p { margin-top: 1.5rem; }
+
+  .prose strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  a { color: var(--fracture-deep); text-decoration: none; border-bottom: 1px solid rgba(163, 61, 16, 0.35); transition: border-color 0.2s; }
+  a:hover { border-bottom-color: var(--fracture-deep); }
+
+  /* LIFELINE SCENE */
+  .lifeline-scene {
+    height: 280vh;
+    position: relative;
+  }
+
+  .lifeline-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 0 3rem;
+  }
+
+  .lifeline-intro {
+    max-width: 1100px;
+    margin: 0 auto 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .lifeline-viz {
+    position: relative;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .lifeline-svg {
+    width: 100%;
+    height: auto;
+    max-height: 44vh;
+    overflow: visible;
+  }
+
+  .lifeline-axis {
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .lifeline-tick {
+    stroke: var(--ink);
+    stroke-width: 1;
+  }
+
+  .lifeline-tick-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--ink-mute);
+    letter-spacing: 0.1em;
+  }
+
+  .lifeline-milestone {
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(15px);
+  }
+
+  .lifeline-milestone.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .milestone-circle {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+
+  .milestone-label {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 500;
+    fill: var(--ink);
+    text-anchor: middle;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .milestone-icon {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .fracture-group {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .fracture-group.visible {
+    opacity: 1;
+  }
+
+  .fracture-line {
+    stroke: var(--fracture);
+    stroke-width: 4;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 6px rgba(212, 84, 28, 0.45));
+    /* Draw-in animation across the full width of the axis */
+    stroke-dasharray: 1100;
+    stroke-dashoffset: 1100;
+    transition: stroke-dashoffset 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .fracture-group.visible .fracture-line {
+    stroke-dashoffset: 0;
+  }
+
+  .fracture-splinter {
+    stroke: var(--fracture);
+    stroke-width: 1.6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  /* Splinters fade in after the main tear has mostly drawn across */
+  .fracture-group.visible .fracture-splinter {
+    opacity: 0.7;
+    transition: opacity 0.6s ease 1.1s;
+  }
+
+  /* Post-fracture elements: the Retirement milestone and its segment drift right and dim */
+  .post-fracture {
+    transition: transform 1.4s cubic-bezier(0.7, 0, 0.3, 1), opacity 1s ease;
+    transform-box: fill-box;
+  }
+
+  .post-fracture.drifting {
+    transform: translateX(60px);
+    opacity: 0.25;
+  }
+
+  /* §07 PLAN HERO — a compressed kintsugi echo of §01's lifeline.
+     Reuses .lifeline-axis, .milestone-circle, .milestone-icon via shared classes.
+     The fracture becomes a gold seam: same jagged path, repair color. */
+  .plan-hero {
+    max-width: 1100px;
+    margin: 0 auto 4rem;
+    padding: 0 2rem;
+  }
+
+  .plan-hero svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    display: block;
+  }
+
+  .plan-hero .kintsugi-seam {
+    stroke: var(--gold);
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 4px rgba(184, 135, 63, 0.45));
+  }
+
+  .plan-hero .kintsugi-splinter {
+    stroke: var(--gold);
+    stroke-width: 1.4;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.6;
+  }
+
+  /* Five-step preview grid — compact row of icons+labels shown before plan-item 1. */
+  .plan-preview {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2.5rem;
+    max-width: 900px;
+    margin: 0 auto 5rem;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .plan-preview-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    flex: 0 0 auto;
+    min-width: 7rem;
+  }
+
+  .plan-preview-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    color: var(--ink);
+  }
+
+  .plan-preview-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .plan-preview-num {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--fracture);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .plan-preview-label {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+    text-align: center;
+    font-variation-settings: "opsz" 144;
+  }
+
+  @media (max-width: 720px) {
+    .plan-preview {
+      gap: 1.5rem;
+      padding: 1.5rem 0.75rem;
+    }
+    .plan-preview-item {
+      min-width: 5.5rem;
+    }
+    .plan-preview-icon {
+      width: 2rem;
+      height: 2rem;
+    }
+    .plan-preview-label {
+      font-size: 0.85rem;
+    }
+  }
+
+  .lifeline-caption {
+    margin-top: 2rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    text-align: center;
+    max-width: 56ch;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .lifeline-caption.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .lifeline-caption strong {
+    color: var(--fracture);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* DATA PROOF */
+  .proof-scene {
+    padding: 10rem 2rem;
+  }
+
+  .proof-header {
+    margin-bottom: 5rem;
+    max-width: 800px;
+  }
+
+  .proof-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--ink);
+    border: 1px solid var(--ink);
+  }
+
+  .proof-card {
+    background: var(--paper);
+    padding: 2rem 1.5rem;
+    position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .proof-scene.active .proof-card:nth-child(1) { transition-delay: 0.05s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(2) { transition-delay: 0.12s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(3) { transition-delay: 0.19s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(4) { transition-delay: 0.26s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(5) { transition-delay: 0.33s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(6) { transition-delay: 0.40s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(7) { transition-delay: 0.47s; opacity: 1; transform: translateY(0); }
+  .proof-scene.active .proof-card:nth-child(8) { transition-delay: 0.54s; opacity: 1; transform: translateY(0); }
+
+  .proof-index {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-mute);
+    margin-bottom: 1rem;
+  }
+
+  .proof-number {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(3.2rem, 5.5vw, 5rem);
+    line-height: 0.9;
+    color: var(--fracture);
+    letter-spacing: -0.04em;
+    margin-bottom: 1rem;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .proof-number .unit {
+    font-size: 0.5em;
+    color: var(--ink-mute);
+    font-weight: 400;
+    margin-left: 0.15em;
+  }
+
+  .proof-label {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    line-height: 1.4;
+    color: var(--ink);
+    font-weight: 500;
+    margin-bottom: 1rem;
+    max-width: 32ch;
+  }
+
+  .proof-source {
+    font-family: var(--sans);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ETHNOGRAPHY */
+  .ethno-scene {
+    padding: 10rem 2rem 6rem;
+  }
+
+  .ethno-header {
+    margin-bottom: 5rem;
+    max-width: 780px;
+  }
+
+  .ethno-card {
+    display: grid;
+    grid-template-columns: 1fr 1.8fr;
+    gap: 3.5rem;
+    padding: 4rem 0;
+    border-top: 1px solid var(--rule);
+    align-items: start;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ethno-card:last-of-type {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 2rem;
+  }
+
+  /* Cards are div:nth-of-type(2) through (5) because .ethno-header is div:nth-of-type(1).
+     Previous rules targeted (1)-(4) and left the fourth card (Tier III) invisible. */
+  .ethno-scene.active .ethno-card:nth-of-type(2) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+  .ethno-scene.active .ethno-card:nth-of-type(3) { transition-delay: 0.25s; opacity: 1; transform: translateY(0); }
+  .ethno-scene.active .ethno-card:nth-of-type(4) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+  .ethno-scene.active .ethno-card:nth-of-type(5) { transition-delay: 0.55s; opacity: 1; transform: translateY(0); }
+
+  .ethno-meta {
+    position: sticky;
+    top: 6rem;
+  }
+
+  .ethno-tier-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--fracture);
+    margin-bottom: 1rem;
+  }
+
+  .ethno-place {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .ethno-coords {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--ink-mute);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .ethno-icon {
+    width: 60px;
+    height: 60px;
+    margin-top: 1rem;
+  }
+
+  .ethno-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ethno-body {
+    font-family: var(--serif);
+    font-size: 1.12rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  .ethno-body p + p { margin-top: 1.1rem; }
+
+  .ethno-body strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .ethno-quote {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.45;
+    color: var(--ink);
+    padding: 1.5rem 0 1.5rem 1.75rem;
+    border-left: 2px solid var(--fracture);
+    margin: 1.75rem 0;
+    max-width: 52ch;
+  }
+
+  .ethno-quote cite {
+    display: block;
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-top: 0.75rem;
+    font-family: var(--mono);
+  }
+
+  .ethno-further {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  .ethno-further span {
+    color: var(--fracture);
+    margin-right: 0.5rem;
+  }
+
+  .ethno-further a {
+    display: inline-block;
+    margin-right: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Tier III photographer canon list — a scannable catalog format
+     used inside the Tier III ethno-card body */
+  .ethno-canon {
+    margin: 1.5rem 0 1.75rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .ethno-canon > div {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: 1.75rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+    align-items: baseline;
+  }
+
+  .ethno-canon dt {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.3;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .ethno-canon dt a {
+    color: var(--ink);
+    border-bottom: 1px solid rgba(26, 24, 20, 0.25);
+    transition: color 0.2s, border-bottom-color 0.2s;
+  }
+
+  .ethno-canon dt a:hover {
+    color: var(--fracture);
+    border-bottom-color: var(--fracture);
+  }
+
+  .ethno-canon dd {
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  .ethno-canon dd em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  @media (max-width: 720px) {
+    .ethno-canon > div {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+      padding: 1rem 0;
+    }
+  }
+
+  /* PULL QUOTE */
+  .pullquote {
+    padding: 10rem 2rem;
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .pullquote blockquote {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(1.8rem, 4vw, 3.2rem);
+    line-height: 1.2;
+    color: var(--ink);
+    max-width: 24ch;
+    margin: 0 auto;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .pullquote blockquote em {
+    color: var(--fracture);
+    font-style: italic;
+  }
+
+  .pullquote .mark {
+    font-family: var(--serif);
+    font-size: 5rem;
+    line-height: 0;
+    color: var(--fracture);
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  /* KINTSUGI INTERSTITIAL — the hinge from fracture to mending */
+  .kintsugi {
+    display: block;
+    padding: 7rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .kintsugi-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 4rem 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+
+  /* A single gold-seam mark above the passage — visible only as a hint, not a decoration */
+  .kintsugi-inner::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3rem;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .kintsugi-inner::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3rem;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .kintsugi p {
+    font-family: var(--serif);
+    font-size: 1.32rem;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin: 0 0 1.6rem;
+  }
+
+  .kintsugi p:last-child {
+    margin-bottom: 0;
+  }
+
+  .kintsugi-mark {
+    color: var(--ink);
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  /* The bowl-and-seam visual above the opening paragraph */
+  .kintsugi-bowl {
+    width: 180px;
+    margin: 0 auto 2.5rem;
+    display: block;
+  }
+
+  .kintsugi-bowl svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .kintsugi-header-icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 1.35rem;
+    color: var(--gold);
+    opacity: 0.95;
+  }
+
+  .kintsugi-header-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .kintsugi-mountains {
+    width: 4.25rem;
+    height: 2.25rem;
+    margin: 0 auto 1.1rem;
+    color: var(--ink);
+    opacity: 0.85;
+  }
+
+  .kintsugi-mountains svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    overflow: visible;
+  }
+
+  .kintsugi-mountains .mountain-village {
+    fill: var(--fracture);
+    stroke: none;
+  }
+
+  .kintsugi-bowl .bowl-rim,
+  .kintsugi-bowl .bowl-body {
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    transition: stroke-dashoffset 1.2s ease;
+  }
+
+  .kintsugi-bowl .bowl-seam {
+    stroke: var(--gold);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 280;
+    stroke-dashoffset: 280;
+    transition: stroke-dashoffset 0.9s ease 0.6s;
+  }
+
+  .kintsugi.active .bowl-rim,
+  .kintsugi.active .bowl-body {
+    stroke-dashoffset: 0;
+  }
+
+  .kintsugi.active .bowl-seam {
+    stroke-dashoffset: 0;
+  }
+
+  /* Separator between the metaphor and the Mondragón case */
+  .kintsugi-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--rule);
+    margin: 3.5rem auto 2.5rem;
+    position: relative;
+  }
+
+  .kintsugi-divider::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3rem;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  /* The Mondragón case itself — sits left-aligned below the centered metaphor */
+  .kintsugi-case {
+    text-align: left;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .kintsugi-case-eyebrow {
+    display: block;
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-weight: 600;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .kintsugi-case p {
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 1.35rem;
+    text-align: left;
+  }
+
+  .kintsugi-case p:last-child {
+    margin-bottom: 0;
+  }
+
+  .kintsugi-beat {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    color: var(--ink);
+    margin-right: 0.3em;
+  }
+
+  .kintsugi-case em {
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  /* THINKERS */
+  .thinkers-scene {
+    padding: 10rem 2rem;
+  }
+
+  .thinkers-header {
+    margin-bottom: 5rem;
+    max-width: 780px;
+  }
+
+  .thinker-row {
+    padding: 4rem 0;
+    border-top: 1px solid var(--rule);
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .thinker-row:last-child { border-bottom: 1px solid var(--rule); }
+
+  /* Thinker rows are div:nth-of-type(2) through (8) because .thinkers-header is div:nth-of-type(1).
+     Seven thinkers total: Atwater, Fisher, Yurchak, Adkins/Cooper/Konings, Varoufakis, Acemoglu/Johnson, Rodríguez-Pose. */
+  .thinkers-scene.active .thinker-row:nth-of-type(2) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+  .thinkers-scene.active .thinker-row:nth-of-type(3) { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+  .thinkers-scene.active .thinker-row:nth-of-type(4) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+  .thinkers-scene.active .thinker-row:nth-of-type(5) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+  .thinkers-scene.active .thinker-row:nth-of-type(6) { transition-delay: 0.5s; opacity: 1; transform: translateY(0); }
+  .thinkers-scene.active .thinker-row:nth-of-type(7) { transition-delay: 0.6s; opacity: 1; transform: translateY(0); }
+  .thinkers-scene.active .thinker-row:nth-of-type(8) { transition-delay: 0.7s; opacity: 1; transform: translateY(0); }
+
+  .thinker-numeral {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 2.8rem;
+    line-height: 0.9;
+    color: var(--fracture);
+    font-variation-settings: "opsz" 144;
+    letter-spacing: -0.02em;
+  }
+
+  .thinker-idea {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    margin-bottom: 1.75rem;
+    max-width: 48ch;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .thinker-idea em {
+    display: block;
+    font-style: italic;
+    color: var(--fracture);
+    font-weight: 400;
+    font-size: clamp(1.9rem, 3.2vw, 2.7rem);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin-bottom: 0.9rem;
+    max-width: 22ch;
+  }
+
+  .thinker-context {
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin-bottom: 2rem;
+  }
+
+  .thinker-context strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .thinker-bio {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.98rem;
+    line-height: 1.5;
+    color: var(--ink-mute);
+    margin-top: 1.25rem;
+    max-width: 62ch;
+  }
+
+  .thinker-reveal {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+    max-width: 60ch;
+  }
+
+  .thinker-reveal-name {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .thinker-reveal-source {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  /* TIERS */
+  .tiers-scene {
+    padding: 10rem 2rem;
+  }
+
+  .tiers-header {
+    margin-bottom: 5rem;
+    max-width: 800px;
+  }
+
+  .tiers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--ink);
+    border: 1px solid var(--ink);
+  }
+
+  .tier {
+    background: var(--paper);
+    padding: 2.5rem 2rem;
+    position: relative;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .tiers-scene.active .tier:nth-child(1) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+  .tiers-scene.active .tier:nth-child(2) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+  .tiers-scene.active .tier:nth-child(3) { transition-delay: 0.5s; opacity: 1; transform: translateY(0); }
+
+  .tier-num {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-mute);
+  }
+
+  .tier-icon {
+    width: 44px;
+    height: 44px;
+    margin: 1.25rem 0 1rem;
+  }
+
+  .tier-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tier-name {
+    font-family: var(--serif);
+    font-size: 1.8rem;
+    font-weight: 500;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144;
+  }
+
+  .tier-pct {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--fracture);
+    margin-bottom: 2rem;
+  }
+
+  .tier dl {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+  }
+
+  .tier dl > div {
+    display: flex;
+    flex-direction: column;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .tier dl > div:last-child { border-bottom: none; }
+
+  .tier dt {
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+  }
+
+  .tier dd {
+    font-family: var(--serif);
+    font-size: 1.02rem;
+    color: var(--ink);
+    line-height: 1.35;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .tier-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    background: var(--ink);
+  }
+
+  .tier:nth-child(1) .tier-bar { background: var(--fracture); }
+  .tier:nth-child(2) .tier-bar { background: var(--gold); }
+  .tier:nth-child(3) .tier-bar { background: var(--ink-mute); }
+
+
+  /* THE PLAN */
+  .plan-scene {
+    padding: 10rem 2rem;
+  }
+
+  .plan-header {
+    margin-bottom: 5rem;
+    max-width: 780px;
+  }
+
+  .plan-list {
+    counter-reset: plan;
+    border-top: 1px solid var(--ink);
+  }
+
+  .plan-item {
+    counter-increment: plan;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 2.5rem;
+    padding: 3rem 0;
+    border-bottom: 1px solid var(--rule);
+    opacity: 0;
+    transform: translateY(25px);
+    transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .plan-scene.active .plan-item:nth-child(1) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+  .plan-scene.active .plan-item:nth-child(2) { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+  .plan-scene.active .plan-item:nth-child(3) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+  .plan-scene.active .plan-item:nth-child(4) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+  .plan-scene.active .plan-item:nth-child(5) { transition-delay: 0.5s; opacity: 1; transform: translateY(0); }
+
+  .plan-num {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 3rem;
+    color: var(--fracture);
+    line-height: 1;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .plan-num::before {
+    content: "0" counter(plan);
+  }
+
+  .plan-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.65rem;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .plan-title em { font-style: italic; color: var(--fracture); }
+
+  .title-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  .title-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: 0 0 auto;
+    color: var(--fracture);
+  }
+
+  .title-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .plan-body {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+
+  /* CARD-FORMAT PLAN ITEMS (inner structure for the five steps) */
+  .plan-icon-slot {
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1.5px solid var(--fracture);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fracture);
+    margin-bottom: 1.25rem;
+    flex: 0 0 auto;
+  }
+
+  .plan-icon-slot svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .plan-promise {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.15rem;
+    line-height: 1.4;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    max-width: 58ch;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .plan-context {
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 1.25rem;
+    max-width: 60ch;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .plan-sublist-header {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    color: var(--fracture);
+    text-transform: uppercase;
+    margin: 1.5rem 0 0.7rem 0;
+  }
+
+  .plan-bullets {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+    max-width: 62ch;
+  }
+
+  .plan-bullets li {
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    padding: 0.35rem 0 0.35rem 1.35rem;
+    position: relative;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .plan-bullets li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    width: 0.5rem;
+    height: 1px;
+    background: var(--fracture);
+  }
+
+  .plan-bullets li em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .plan-bullets li strong {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .plan-meta-question {
+    border-left: 2px solid var(--fracture);
+    padding: 0.8rem 0 0.8rem 1.3rem;
+    margin: 1.5rem 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.1rem;
+    line-height: 1.45;
+    color: var(--ink);
+    max-width: 58ch;
+    background: var(--fracture-pale);
+    font-variation-settings: "opsz" 36;
+  }
+
+  /* NEW INSTRUMENTS FOR THE CHALLENGED MIDDLE */
+  .instruments-scene {
+    padding: 10rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .instruments-header {
+    max-width: 58ch;
+    margin-bottom: 5rem;
+  }
+
+  .instruments-header h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    line-height: 1.1;
+    color: var(--ink);
+    margin-top: 1.5rem;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .instruments-header h2 em {
+    color: var(--fracture);
+    font-style: italic;
+  }
+
+  .instruments-intro {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-top: 2rem;
+    max-width: 58ch;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .instrument-block {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-bottom: 6rem;
+    max-width: 62ch;
+  }
+
+  .instruments-scene.active .instrument-block:nth-of-type(2) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+  .instruments-scene.active .instrument-block:nth-of-type(3) { transition-delay: 0.25s; opacity: 1; transform: translateY(0); }
+  .instruments-scene.active .instrument-block:nth-of-type(4) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+
+  .instrument-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--fracture);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .instrument-block h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-style: italic;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 2rem;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .instrument-block p {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin-bottom: 1.4rem;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .instrument-block p strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .instrument-block p em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .data-box {
+    border-left: 2px solid var(--fracture);
+    background: var(--fracture-pale);
+    padding: 1.6rem 1.8rem;
+    margin: 2.2rem 0;
+    font-family: var(--sans);
+  }
+
+  .data-box-title {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--fracture-deep);
+    margin-bottom: 0.8rem;
+  }
+
+  .data-box-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  .data-box-source {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--ink-mute);
+    margin-top: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .instrument-postscript {
+    border-top: 1px solid var(--rule);
+    padding-top: 3rem;
+    margin-top: 2rem;
+  }
+
+  .instrument-postscript .instrument-label {
+    color: var(--ink-mute);
+  }
+
+  /* READING LIST */
+  .reading-scene {
+    padding: 10rem 2rem 6rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .reading-header {
+    margin-bottom: 5rem;
+    max-width: 780px;
+  }
+
+  .reading-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--ink);
+  }
+
+  .reading-item {
+    padding: 2.25rem 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .reading-item:nth-child(odd) {
+    padding-right: 2.5rem;
+    border-right: 1px solid var(--rule);
+  }
+
+  .reading-item:nth-child(even) {
+    padding-left: 2.5rem;
+  }
+
+  .reading-num {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--fracture);
+    letter-spacing: 0.1em;
+    padding-top: 0.4rem;
+  }
+
+  .reading-title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.2rem;
+    line-height: 1.25;
+    color: var(--ink);
+    margin-bottom: 0.35rem;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .reading-title a {
+    color: var(--ink);
+    border-bottom: 1px solid transparent;
+  }
+
+  .reading-title a:hover {
+    border-bottom-color: var(--fracture);
+    color: var(--fracture);
+  }
+
+  .reading-author {
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 0.9rem;
+  }
+
+  .reading-desc {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  /* CLOSE */
+  .close {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .close .section-num { margin-bottom: 2rem; }
+
+  .close h2 {
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+    max-width: 16ch;
+    margin-bottom: 3rem;
+  }
+
+  .close .prose {
+    max-width: 52ch;
+    font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+  }
+
+  .close .signoff {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  .close .signoff .right { color: var(--fracture); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .proof-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 900px) {
+    html { font-size: 106%; }
+    section { padding: 5rem 1.5rem; }
+    .hero { padding: 5rem 1.5rem 3rem; }
+    .masthead { padding: 1rem 1.5rem; font-size: 0.6rem; }
+    .hero h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
+    .tiers-grid { grid-template-columns: 1fr; }
+    .proof-grid { grid-template-columns: 1fr; }
+    .thinker-row {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      padding: 2.75rem 0;
+    }
+    .thinker-numeral { font-size: 2rem; }
+    .thinker-idea { font-size: 1.45rem; }
+    .ethno-card {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      padding: 3rem 0;
+    }
+    .ethno-meta { position: static; }
+    .plan-item {
+      grid-template-columns: 60px 1fr;
+      gap: 1.5rem;
+      padding: 2.5rem 0;
+    }
+    .plan-num { font-size: 2rem; }
+    .reading-list { grid-template-columns: 1fr; }
+    .reading-item:nth-child(odd) {
+      padding-right: 0;
+      border-right: none;
+    }
+    .reading-item:nth-child(even) { padding-left: 0; }
+    .lifeline-sticky { padding: 6rem 0 2rem; }
+    .lifeline-svg { max-height: 36vh; }
+    .lifeline-caption { margin-top: 1.25rem; font-size: 1.05rem; }
+  }
+
+  @media (max-width: 600px) {
+    .lifeline-svg { max-height: 32vh; }
+    .lifeline-caption { font-size: 1rem; margin-top: 1rem; padding: 0 1rem; }
+    .lifeline-intro h2 { font-size: clamp(1.4rem, 5vw, 1.9rem) !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<header class="masthead">
+  <span>Running the Ghost<span class="dot"></span>Field Dispatch</span>
+  <span>Vol. I / 2026</span>
+</header>
+
+<nav class="section-nav" aria-label="Section navigation">
+  <div class="section-nav-inner">
+    <a href="#lifeline"><span class="num">01</span>The Lifeline</a>
+    <a href="#proof"><span class="num">02</span>The Evidence</a>
+    <a href="#tiers"><span class="num">03</span>The Stratification</a>
+    <a href="#ethnography"><span class="num">04</span>The Field</a>
+    <a href="#instruments"><span class="num">05</span>New Instruments</a>
+    <a href="#thinkers"><span class="num">06</span>The Theory</a>
+    <a href="#plan"><span class="num">07</span>The Plan</a>
+    <a href="#task"><span class="num">08</span>The Task</a>
+    <a href="#reading"><span class="num">＋</span>Further Reading</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="kicker">A Field Dispatch · 2026</span>
+  <h1>Running the<br><em>Ghost</em>.</h1>
+  <p class="deck">The mid-century script has been severed. Society is still running <em>its ghost.</em></p>
+  <div class="byline">
+    <span>Essay</span>
+    <div class="rule"></div>
+    <span>15 min read</span>
+  </div>
+  <div class="scroll-cue">Scroll ↓</div>
+</section>
+
+<!-- LIFELINE -->
+<section class="lifeline-scene" id="lifeline">
+  <div class="lifeline-sticky">
+    <div class="lifeline-intro">
+      <span class="section-num">§ 01 — THE LIFELINE</span>
+      <h2 style="font-size: clamp(1.8rem, 3.5vw, 2.8rem); max-width: 28ch;">One life. Five promises. A contract between generations that held for seventy years and now it is starting to fracture.</h2>
+    </div>
+
+    <div class="lifeline-viz">
+      <svg class="lifeline-svg" viewBox="0 0 1100 280" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <symbol id="icon-school" viewBox="0 0 24 24">
+            <path d="M4 6 L12 3 L20 6 L12 9 Z" class="milestone-icon"/>
+            <path d="M7 7.5 L7 13 C7 14.5 9 16 12 16 C15 16 17 14.5 17 13 L17 7.5" class="milestone-icon"/>
+            <path d="M20 6 L20 11" class="milestone-icon"/>
+          </symbol>
+          <symbol id="icon-job" viewBox="0 0 24 24">
+            <rect x="3" y="7" width="18" height="13" rx="1" class="milestone-icon"/>
+            <path d="M9 7 L9 4 L15 4 L15 7" class="milestone-icon"/>
+            <line x1="3" y1="13" x2="21" y2="13" class="milestone-icon"/>
+          </symbol>
+          <symbol id="icon-house" viewBox="0 0 24 24">
+            <path d="M3 11 L12 3 L21 11 L21 20 L14 20 L14 14 L10 14 L10 20 L3 20 Z" class="milestone-icon"/>
+          </symbol>
+          <symbol id="icon-kids" viewBox="0 0 24 24">
+            <circle cx="8" cy="7" r="2.5" class="milestone-icon"/>
+            <path d="M4 20 L4 14 C4 12.5 5.5 11.5 8 11.5 C10.5 11.5 12 12.5 12 14 L12 20" class="milestone-icon"/>
+            <circle cx="16" cy="9" r="2" class="milestone-icon"/>
+            <path d="M13 20 L13 15 C13 14 14 13 16 13 C18 13 19 14 19 15 L19 20" class="milestone-icon"/>
+          </symbol>
+          <symbol id="icon-retirement" viewBox="0 0 24 24">
+            <circle cx="12" cy="10" r="4" class="milestone-icon"/>
+            <line x1="12" y1="2" x2="12" y2="4" class="milestone-icon"/>
+            <line x1="12" y1="16" x2="12" y2="18" class="milestone-icon"/>
+            <line x1="4" y1="10" x2="6" y2="10" class="milestone-icon"/>
+            <line x1="18" y1="10" x2="20" y2="10" class="milestone-icon"/>
+            <line x1="6.3" y1="4.3" x2="7.7" y2="5.7" class="milestone-icon"/>
+            <line x1="16.3" y1="5.7" x2="17.7" y2="4.3" class="milestone-icon"/>
+            <line x1="4" y1="22" x2="20" y2="22" class="milestone-icon"/>
+          </symbol>
+        </defs>
+
+        <!-- Life track: two segments that will separate at the fracture -->
+        <line x1="60" y1="170" x2="780" y2="170" class="lifeline-axis"/>
+        <line x1="820" y1="170" x2="1040" y2="170" class="lifeline-axis post-fracture"/>
+
+        <!-- Age ticks (segment 1) -->
+        <g>
+          <line x1="100" y1="170" x2="100" y2="176" class="lifeline-tick"/>
+          <text x="100" y="192" class="lifeline-tick-label" text-anchor="middle">18</text>
+          <line x1="300" y1="170" x2="300" y2="176" class="lifeline-tick"/>
+          <text x="300" y="192" class="lifeline-tick-label" text-anchor="middle">22</text>
+          <line x1="500" y1="170" x2="500" y2="176" class="lifeline-tick"/>
+          <text x="500" y="192" class="lifeline-tick-label" text-anchor="middle">32</text>
+          <line x1="700" y1="170" x2="700" y2="176" class="lifeline-tick"/>
+          <text x="700" y="192" class="lifeline-tick-label" text-anchor="middle">40</text>
+          <text x="60" y="222" class="lifeline-tick-label" style="font-size: 9px;">AGE →</text>
+        </g>
+
+        <!-- Age tick (segment 2 - post-fracture) -->
+        <g class="post-fracture">
+          <line x1="900" y1="170" x2="900" y2="176" class="lifeline-tick"/>
+          <text x="900" y="192" class="lifeline-tick-label" text-anchor="middle">65</text>
+        </g>
+
+        <!-- HORIZONTAL FRACTURE: a jagged tear runs the full length of the axis and
+             draws in from left to right when the lifeline enters the fracture phase.
+             Rendered here (before the milestones) so the milestone dots stay on top
+             of the tear. The post-fracture segment (Retirement) drifts right, peeling
+             away from the tear. -->
+        <g class="fracture-group">
+          <!-- Main horizontal jagged tear running the entire length of the axis -->
+          <path class="fracture-line" d="M 60 170 L 105 166 L 170 178 L 209 163 L 256 174 L 311 160 L 347 178 L 384 166 L 445 175 L 497 161 L 535 179 L 581 162 L 634 174 L 670 162 L 734 178 L 785 162 L 800 180 L 815 160 L 826 174 L 862 165 L 899 174 L 947 162 L 995 180 L 1032 165 L 1040 170"/>
+
+          <!-- Splinters distributed along the tear -->
+          <path class="fracture-splinter" d="M 170 178 L 172 196 L 166 206"/>
+          <path class="fracture-splinter" d="M 256 174 L 260 188 L 254 198"/>
+          <path class="fracture-splinter" d="M 347 178 L 349 194 L 343 204"/>
+          <path class="fracture-splinter" d="M 445 175 L 447 191 L 441 201"/>
+          <path class="fracture-splinter" d="M 535 179 L 538 195 L 532 205"/>
+          <path class="fracture-splinter" d="M 581 162 L 583 146 L 578 136"/>
+          <path class="fracture-splinter" d="M 634 174 L 636 190 L 630 200"/>
+
+          <!-- Concentrated splinters at the real break point (between Kids at 700 and Retirement at 900) -->
+          <path class="fracture-splinter" d="M 734 178 L 738 196 L 730 210" stroke-width="1.9"/>
+          <path class="fracture-splinter" d="M 785 162 L 780 142 L 770 130" stroke-width="1.9"/>
+          <path class="fracture-splinter" d="M 800 180 L 805 200 L 798 215" stroke-width="1.9"/>
+          <path class="fracture-splinter" d="M 815 160 L 822 140 L 830 128" stroke-width="1.9"/>
+
+          <!-- Splinters continuing along the post-fracture portion -->
+          <path class="fracture-splinter" d="M 862 165 L 864 148 L 858 138"/>
+          <path class="fracture-splinter" d="M 947 162 L 949 144 L 943 134"/>
+          <path class="fracture-splinter" d="M 995 180 L 998 198 L 991 208"/>
+        </g>
+
+        <!-- M1 SCHOOL -->
+        <g class="lifeline-milestone" data-milestone="1">
+          <line x1="100" y1="110" x2="100" y2="156" stroke="#1a1814" stroke-width="1" stroke-dasharray="2 3"/>
+          <circle cx="100" cy="170" r="7" fill="#d4541c" stroke="#1a1814" stroke-width="2"/>
+          <circle cx="100" cy="80" r="26" class="milestone-circle"/>
+          <use href="#icon-school" x="84" y="64" width="32" height="32"/>
+          <text x="100" y="42" class="milestone-label">School</text>
+        </g>
+
+        <!-- M2 JOB -->
+        <g class="lifeline-milestone" data-milestone="2">
+          <line x1="300" y1="110" x2="300" y2="156" stroke="#1a1814" stroke-width="1" stroke-dasharray="2 3"/>
+          <circle cx="300" cy="170" r="7" fill="#d4541c" stroke="#1a1814" stroke-width="2"/>
+          <circle cx="300" cy="80" r="26" class="milestone-circle"/>
+          <use href="#icon-job" x="284" y="64" width="32" height="32"/>
+          <text x="300" y="42" class="milestone-label">Job</text>
+        </g>
+
+        <!-- M3 HOUSE -->
+        <g class="lifeline-milestone" data-milestone="3">
+          <line x1="500" y1="110" x2="500" y2="156" stroke="#1a1814" stroke-width="1" stroke-dasharray="2 3"/>
+          <circle cx="500" cy="170" r="7" fill="#d4541c" stroke="#1a1814" stroke-width="2"/>
+          <circle cx="500" cy="80" r="26" class="milestone-circle"/>
+          <use href="#icon-house" x="484" y="64" width="32" height="32"/>
+          <text x="500" y="42" class="milestone-label">House</text>
+        </g>
+
+        <!-- M4 KIDS -->
+        <g class="lifeline-milestone" data-milestone="4">
+          <line x1="700" y1="110" x2="700" y2="156" stroke="#1a1814" stroke-width="1" stroke-dasharray="2 3"/>
+          <circle cx="700" cy="170" r="7" fill="#d4541c" stroke="#1a1814" stroke-width="2"/>
+          <circle cx="700" cy="80" r="26" class="milestone-circle"/>
+          <use href="#icon-kids" x="684" y="64" width="32" height="32"/>
+          <text x="700" y="42" class="milestone-label">Kids</text>
+        </g>
+
+        <!-- M5 RETIREMENT (attached to post-fracture segment, drifts right) -->
+        <g class="lifeline-milestone post-fracture" data-milestone="5">
+          <line x1="900" y1="110" x2="900" y2="156" stroke="#1a1814" stroke-width="1" stroke-dasharray="2 3"/>
+          <circle cx="900" cy="170" r="7" fill="#d4541c" stroke="#1a1814" stroke-width="2"/>
+          <circle cx="900" cy="80" r="26" class="milestone-circle"/>
+          <use href="#icon-retirement" x="884" y="64" width="32" height="32"/>
+          <text x="900" y="42" class="milestone-label">Retirement</text>
+        </g>
+      </svg>
+    </div>
+
+    <p class="lifeline-caption">
+      Seventy years of gravity held these five steps together. Somewhere between raising children and the promised reward at the end, <strong>the connection failed.</strong>
+    </p>
+  </div>
+</section>
+
+<!-- DATA PROOF -->
+<section class="proof-scene" id="proof">
+  <div class="proof-header">
+    <span class="section-num">§ 02 — THE EVIDENCE</span>
+    <h2>Eight numbers that describe a <em>severed economy.</em></h2>
+    <div class="prose" style="margin-top: 2rem;">
+      <p>Eight numbers, drawn from the last eighteen months, that together help to describe the structural shift.</p>
+    </div>
+  </div>
+
+  <div class="proof-grid">
+    <div class="proof-card">
+      <div class="proof-index">FIG. I / CONSUMPTION</div>
+      <div class="proof-number">45<span class="unit">%</span></div>
+      <div class="proof-label">Of all US consumer spending now comes from the top 10% of households. The bottom 60% accounts for just 23%.</div>
+      <div class="proof-source">Moody's Analytics · Q3 2025</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. II / WEALTH</div>
+      <div class="proof-number">31<span class="unit">%</span></div>
+      <div class="proof-label">Of all US household net worth is held by the top 1%. The bottom 50% holds 2.5%. This is not a K. It is a cliff.</div>
+      <div class="proof-source">Federal Reserve DFA · Q2 2025</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. III / SAVINGS</div>
+      <div class="proof-number">4<span class="unit">%</span></div>
+      <div class="proof-label">The US personal savings rate at the end of 2025, down from 5.2% at the start of the year. Nearly 1 in 4 Americans has no emergency savings at all.</div>
+      <div class="proof-source">BEA · Bankrate 2025</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. IV / FRAGILITY</div>
+      <div class="proof-number">42<span class="unit">%</span></div>
+      <div class="proof-label">Of US households say they could cover expenses for a month or less if they lost their main source of income. One shock away, plainly.</div>
+      <div class="proof-source">CFPB Making Ends Meet, 2024</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. V / ENTRY</div>
+      <div class="proof-number">−35<span class="unit">%</span></div>
+      <div class="proof-label">Drop in overall US entry-level job postings since January 2023 as generative AI absorbs the cognitive grunt work that used to be the apprenticeship.</div>
+      <div class="proof-source">Revelio Labs · CNBC, Sept 2025</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. VI / THE LADDER</div>
+      <div class="proof-number">−50<span class="unit">%</span></div>
+      <div class="proof-label">Decline in new-role hires of workers with less than one year of post-graduate experience at top public tech firms, 2019–2024. The first rung is gone.</div>
+      <div class="proof-source">SignalFire State of Talent, 2024</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. VII / DREAD</div>
+      <div class="proof-number">71<span class="unit">%</span></div>
+      <div class="proof-label">Of US adults fear AI will "put too many people out of work permanently." This is not speculation. It is the public already bracing for what the corporate earnings calls keep promising.</div>
+      <div class="proof-source">Reuters/Ipsos · August 2025</div>
+    </div>
+
+    <div class="proof-card">
+      <div class="proof-index">FIG. VIII / FORECAST</div>
+      <div class="proof-number">64<span class="unit">%</span></div>
+      <div class="proof-label">Of the US public thinks AI will lead to fewer jobs in America over the next 20 years. Only 39% of AI experts agree — a 25-point public/expert gap, the largest Pew has measured.</div>
+      <div class="proof-source">Pew Research Center · April 2025</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIERS -->
+<section class="tiers-scene" id="tiers">
+  <div class="tiers-header">
+    <span class="section-num">§ 03 — THE STRATIFICATION</span>
+    <h2>One map fractured into three.</h2>
+    <div class="prose">
+      <p>What was once a ladder became three separate worlds, each operating on its own logic of security, status, and time. The instructions you inherited probably only apply to one of them, and probably not the one you're actually in.</p>
+    </div>
+  </div>
+
+  <div class="tiers-grid">
+    <div class="tier">
+      <div class="tier-bar"></div>
+      <span class="tier-num">TIER I</span>
+      <div class="tier-icon">
+        <svg viewBox="0 0 48 48">
+          <rect x="8" y="16" width="32" height="26" rx="1"/>
+          <path d="M12 16 L12 10 C12 7 15 5 24 5 C33 5 36 7 36 10 L36 16"/>
+          <circle cx="24" cy="28" r="5"/>
+          <line x1="24" y1="33" x2="24" y2="38"/>
+        </svg>
+      </div>
+      <h3 class="tier-name">The Insulated</h3>
+      <div class="tier-pct">Top 0.1%</div>
+      <dl>
+        <div><dt>Security Reality</dt><dd>Truly insulated</dd></div>
+        <div><dt>Operative Currency</dt><dd>Elite networks. Access.</dd></div>
+        <div><dt>Status Signal</dt><dd>Post-aspiration assets: land, water, longevity</dd></div>
+        <div><dt>Outlook</dt><dd>Building exits: New Zealand, Mars, the bunker</dd></div>
+      </dl>
+    </div>
+
+    <div class="tier">
+      <div class="tier-bar"></div>
+      <span class="tier-num">TIER II</span>
+      <div class="tier-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="M12 10 L36 10 L34 14 L14 14 Z"/>
+          <path d="M14 14 L14 34 L34 34 L34 14"/>
+          <path d="M12 38 L36 38 L38 42 L10 42 Z"/>
+          <path d="M24 14 L22 20 L25 24 L22 30 L24 34"/>
+        </svg>
+      </div>
+      <h3 class="tier-name">The Precarious</h3>
+      <div class="tier-pct">The performing middle</div>
+      <dl>
+        <div><dt>Security Reality</dt><dd>One shock away</dd></div>
+        <div><dt>Operative Currency</dt><dd>Credit lines. Property equity. The co-signer.</dd></div>
+        <div><dt>Status Signal</dt><dd>Curated tastes. Boutique groceries. Hyper-literacy.</dd></div>
+        <div><dt>Outlook</dt><dd>Executing the old script, while it rots</dd></div>
+      </dl>
+    </div>
+
+    <div class="tier">
+      <div class="tier-bar"></div>
+      <span class="tier-num">TIER III</span>
+      <div class="tier-icon">
+        <svg viewBox="0 0 48 48">
+          <circle cx="24" cy="10" r="3"/>
+          <circle cx="10" cy="22" r="3"/>
+          <circle cx="38" cy="22" r="3"/>
+          <circle cx="16" cy="38" r="3"/>
+          <circle cx="32" cy="38" r="3"/>
+          <line x1="24" y1="13" x2="11" y2="19"/>
+          <line x1="24" y1="13" x2="37" y2="19"/>
+          <line x1="13" y1="22" x2="35" y2="22"/>
+          <line x1="11" y1="25" x2="15" y2="35"/>
+          <line x1="37" y1="25" x2="33" y2="35"/>
+          <line x1="19" y1="38" x2="29" y2="38"/>
+        </svg>
+      </div>
+      <h3 class="tier-name">The Adaptive</h3>
+      <div class="tier-pct">Outside the ladder</div>
+      <dl>
+        <div><dt>Security Reality</dt><dd>Precarious but clear-eyed</dd></div>
+        <div><dt>Operative Currency</dt><dd>The neighbor's truck. The church pantry.</dd></div>
+        <div><dt>Status Signal</dt><dd>Utility. Repair. Sovereignty.</dd></div>
+        <div><dt>Outlook</dt><dd>Adapting via mutual aid, barter, and repair</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- ETHNOGRAPHY -->
+<section class="ethno-scene" id="ethnography">
+  <div class="ethno-header">
+    <span class="section-num">§ 04 — THE VIEW FROM THE FIELD</span>
+    <h2>The numbers have <em>faces, boats, half-zips, farmhouses.</em></h2>
+    <div class="prose" style="margin-top: 2rem;">
+      <p>The numbers help tell you <em>what</em>. The photographs, the places, and the postures help show you <em>who</em>, and get you closer to <em>why</em>. The fracture is also, and perhaps mostly, a <strong>lived texture</strong>: a sailing yacht in the Mediterranean, a half-zip in a suburban kitchen. Four dispatches, because the fracture looks different depending on which side of it you're standing on.</p>
+    </div>
+  </div>
+
+  <!-- TIER I: BOATS & ROCKETS -->
+  <div class="ethno-card">
+    <div class="ethno-meta">
+      <div class="ethno-tier-tag">TIER I — THE INSULATED</div>
+      <div class="ethno-place">Mediterranean moorings &amp; low-Earth orbit</div>
+      <div class="ethno-coords">SEA LEVEL · 550 KM UP</div>
+      <div class="ethno-icon">
+        <svg viewBox="0 0 60 60">
+          <!-- Satellite (upper) -->
+          <rect x="26" y="10" width="8" height="6"/>
+          <line x1="18" y1="13" x2="26" y2="13"/>
+          <line x1="34" y1="13" x2="42" y2="13"/>
+          <rect x="14" y="10" width="4" height="6"/>
+          <rect x="42" y="10" width="4" height="6"/>
+          <line x1="30" y1="16" x2="30" y2="22"/>
+          <!-- Horizon line -->
+          <line x1="4" y1="28" x2="56" y2="28" stroke-dasharray="2 3"/>
+          <!-- Sailing yacht (lower) -->
+          <line x1="30" y1="32" x2="30" y2="46"/>
+          <path d="M30 34 L42 46 L30 46 Z"/>
+          <path d="M30 36 L22 46 L30 46"/>
+          <path d="M12 48 L48 48 L44 54 L16 54 Z"/>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <div class="ethno-body">
+        <p>At the top of the fracture, wealth is no longer mainly about owning places. It is about <em>escaping</em> them.</p>
+        <p>The visible version is boats. Jeff Bezos took delivery of <em>Koru</em> in 2023, a 417-foot sailing yacht reportedly worth around $500 million, the largest of its kind ever built. A 246-foot support vessel, <em>Abeona</em>, shadows it through the Mediterranean carrying the real luggage of modern aristocracy: helicopter, seaplane, ATVs, staff, backup everything. Together the vessels require more than seventy crew and cost an estimated <strong>$30 million a year to run.</strong> Oxfam estimates that a single superyacht emits around <strong>7,020 tonnes of CO₂ annually</strong>, more than some small countries.</p>
+        <p>But the yacht is almost quaint now. The older symbol. The older flex.</p>
+        <p>The real grab is happening above the boats.</p>
+        <p>By December 2025, Elon Musk's Starlink had <strong>9,357 satellites in low-Earth orbit</strong>, roughly two-thirds of all active satellites in space. In 2024, SpaceX carried out more than half of all orbital launch attempts on Earth, more than all non-US countries combined. The FCC has publicly described the company as a monopoly. SpaceX is reportedly preparing an IPO at a <strong>$1.75 trillion</strong> enterprise valuation.</p>
+        <p>This is not just a rich man getting richer. It is a private actor building <em>the infrastructure layer beneath sovereignty itself.</em></p>
+        <p>Rockefeller cornered oil refining. Musk is trying to corner orbital access, the altitude from which the modern internet, and much of modern state capacity, can increasingly be routed. As Foreign Policy put it in March 2026, this is "a delegation of sovereignty," a strategic function exercised by an unaccountable executive.</p>
+        <p>The old elite bought coastline. The new one is buying <em>altitude.</em></p>
+      </div>
+      <div class="ethno-further">
+        <span>FURTHER →</span>
+        <a href="https://www.boatinternational.com/yachts/news/yachts-owned-by-tech-billionaires" target="_blank" rel="noopener">Boat International: Tech billionaire yachts</a>
+        <a href="https://prospect.org/2025/05/19/2025-05-19-rocketing-toward-monopoly-elon-musk-spacex/" target="_blank" rel="noopener">American Prospect: Rocketing Toward Monopoly</a>
+        <a href="https://foreignpolicy.com/2026/03/20/starlink-spacex-musk-geopolitics-war-ukraine-russia-iran/" target="_blank" rel="noopener">Foreign Policy: Starlink Has Privatized Geopolitics</a>
+        <a href="https://www.thesling.org/the-antitrust-case-against-spacex/" target="_blank" rel="noopener">The Sling: The Antitrust Case Against SpaceX</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIER II-A: THE STRIVER / PERFORMING MIDDLE -->
+  <div class="ethno-card">
+    <div class="ethno-meta">
+      <div class="ethno-tier-tag">TIER II-A — THE STRIVER</div>
+      <div class="ethno-place">The generic American suburb</div>
+      <div class="ethno-coords">SHED 2024 · CFPB 2024</div>
+      <div class="ethno-icon">
+        <svg viewBox="0 0 60 60">
+          <path d="M8 50 L8 25 L30 10 L52 25 L52 50 Z"/>
+          <rect x="24" y="35" width="12" height="15"/>
+          <line x1="8" y1="50" x2="52" y2="50"/>
+          <path d="M18 42 L16 46 L19 48 L17 50" stroke-width="1.2"/>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <div class="ethno-body">
+        <p>The striver tier is harder to photograph because it has spent years mastering the art of <em>looking fine.</em></p>
+        <p>A three-bedroom house. A Delta Premium tag still looped around the carry-on by the stairs. Fourteen-dollar yogurt in the fridge. A quarter-zip on the chair. A Garmin on the counter. A Subaru in the driveway that is one warning light away from a repair bill no one has room for.</p>
+        <p>This is not affluence. It is <em>maintenance.</em> It is the choreography of holding the picture together.</p>
+        <p>The Federal Reserve's 2024 Survey of Household Economics and Decisionmaking reads like a field guide to this condition. Spending has outpaced income growth for three straight years. <strong>Nearly one in four adults has no emergency savings at all.</strong> Forty-two percent of households could cover one month or less of expenses if their main income disappeared.</p>
+        <p>The pressure here is not only financial. It is <em>theatrical.</em></p>
+        <p>This tier is still trying to wear the costume of middle-class stability after the stage has started to buckle. The kitchen island remains. The points strategy remains. The children's activities remain. The feeling that one bad invoice, one bad diagnosis, one bad transmission could crack the whole façade also remains.</p>
+        <p>The striver's deepest fear is not poverty itself.</p>
+        <p>It is <strong>misrecognition.</strong> It is being seen, suddenly and unmistakably, as someone lower.</p>
+      </div>
+      <blockquote class="ethno-quote">
+        They may never win, but that doesn't mean — <em>I can't help you lose.</em>
+        <cite>Peter Atwater · Fortune · November 2025</cite>
+      </blockquote>
+      <div class="ethno-further">
+        <span>FURTHER →</span>
+        <a href="https://www.federalreserve.gov/publications/2025-economic-well-being-of-us-households-in-2024-savings-and-investments.htm" target="_blank" rel="noopener">Federal Reserve SHED 2024</a>
+        <a href="https://fortune.com/2025/11/13/economist-popularized-k-shaped-economy-key-factor-overlooked-consumer-sentiment/" target="_blank" rel="noopener">Fortune: Atwater on the "sea of despair"</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIER II-B: THE DINERGOTH -->
+  <div class="ethno-card">
+    <div class="ethno-meta">
+      <div class="ethno-tier-tag">TIER II-B — THE DINERGOTH</div>
+      <div class="ethno-place">Small-town &amp; exurban America</div>
+      <div class="ethno-coords">THE OTHER MIDDLE</div>
+      <div class="ethno-icon">
+        <svg viewBox="0 0 60 60">
+          <circle cx="30" cy="22" r="9"/>
+          <path d="M21 22 L17 14 M39 22 L43 14"/>
+          <path d="M14 52 C14 38 18 32 30 32 C42 32 46 38 46 52"/>
+          <line x1="24" y1="22" x2="26" y2="22" stroke-width="2.2"/>
+          <line x1="34" y1="22" x2="36" y2="22" stroke-width="2.2"/>
+          <circle cx="48" cy="26" r="1.5" fill="#1a1814"/>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <div class="ethno-body">
+        <p>This is the striver's mirror image. Same broad band of the economic map. Different stance toward the world.</p>
+        <p>Where the striver performs composure, this figure performs <em>refusal.</em></p>
+        <p>Downwardly mobile on paper, post-aspirational in style, the dinergoth is the person who has stopped auditioning for the old middle-class script. Retail job. Vape. Tattoos. Cat ears. Black coffee in a cracked booth. An aesthetic that mixes irony, fatigue, and a kind of deadpan noncompliance.</p>
+        <p>Sean Monahan gave the figure a name in March 2026: the <strong>dinergoth.</strong></p>
+        <p>The name is funny. That is partly why it works. It catches something real before the culture has had time to sand it down into sociology.</p>
+        <p>But Monahan's sharper point is not actually about the dinergoth. It is about the people who need to <em>recoil</em> from them.</p>
+        <p>The professional class has to treat this position as a personal failure, or a taste failure, or a motivation failure, because the alternative is too destabilizing. The alternative is that the same forces pressing on the dinergoth are pressing on them too. The same slippage. The same fragility. The same descent, with different styling.</p>
+        <p>The panic around downward mobility is rarely about those already living it.</p>
+        <p>It is about those still close enough to see themselves <em>in the glass.</em></p>
+      </div>
+      <blockquote class="ethno-quote">
+        Your half-zip won't save you.
+        <cite>Sean Monahan · "Notes on Dinergoth" · March 2026</cite>
+      </blockquote>
+      <div class="ethno-further">
+        <span>FURTHER →</span>
+        <a href="https://www.8ball.report/" target="_blank" rel="noopener">Sean Monahan's 8ball</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIER III: OFF-AXIS / THE AMERICAN CANON -->
+  <div class="ethno-card">
+    <div class="ethno-meta">
+      <div class="ethno-tier-tag">TIER III — THE ADAPTIVE</div>
+      <div class="ethno-place">Braddock, Hale County, Leon County, Lordstown</div>
+      <div class="ethno-coords">THE AMERICAN CANON</div>
+      <div class="ethno-icon">
+        <svg viewBox="0 0 60 60">
+          <circle cx="18" cy="24" r="3"/>
+          <circle cx="42" cy="24" r="3"/>
+          <circle cx="30" cy="42" r="3"/>
+          <line x1="20" y1="26" x2="28" y2="40"/>
+          <line x1="40" y1="26" x2="32" y2="40"/>
+          <line x1="21" y1="24" x2="39" y2="24"/>
+          <path d="M12 54 L24 42 L36 54 M24 42 L24 30 L36 22 L48 30 L48 54"/>
+        </svg>
+      </div>
+    </div>
+    <div>
+      <div class="ethno-body">
+        <p>A generation of American documentary photographers has spent the last fifteen years building an archive of Tier III: communities where the mid-century script was either abandoned by force or rejected on purpose. It is the richest ethnographic record the fracture has, and most brand strategy decks have never seen it, or even know it exists.</p>
+        <p>The canon:</p>
+      </div>
+
+      <dl class="ethno-canon">
+        <div>
+          <dt><a href="https://latoyarubyfrazier.com/work/notion-of-family/" target="_blank" rel="noopener">LaToya Ruby Frazier</a></dt>
+          <dd><em>The Notion of Family</em> (2001–2014), made in her hometown of Braddock, Pennsylvania (a Black steel town in the Monongahela Valley whose hospital was demolished in 2010). Extended the work to Flint during the water crisis and Lordstown when GM closed the plant. MacArthur Fellow, 2015. First MoMA retrospective, 2024.</dd>
+        </div>
+        <div>
+          <dt><a href="https://www.halecountyfilm.com/" target="_blank" rel="noopener">RaMell Ross</a></dt>
+          <dd><em>Hale County This Morning, This Evening</em>: five years in rural Alabama, Oscar-nominated. Ross calls his own mode "banal and epic simultaneously," which is also the best short description of the fracture itself.</dd>
+        </div>
+        <div>
+          <dt><a href="https://www.bryanschutmaat.com/" target="_blank" rel="noopener">Bryan Schutmaat</a></dt>
+          <dd><em>Grays the Mountain Sends</em> and <em>Sons of the Living</em>: the definitive portraits of the dispossessed American West.</dd>
+        </div>
+        <div>
+          <dt><a href="https://www.magnumphotos.com/photographer/matt-black/" target="_blank" rel="noopener">Matt Black</a></dt>
+          <dd><em>American Geography</em>: a six-year, 100,000-mile journey through 46 states in which he never once left a census-designated poverty area. 2025 MacArthur.</dd>
+        </div>
+        <div>
+          <dt><a href="https://www.petervanagtmael.net/" target="_blank" rel="noopener">Peter van Agtmael</a></dt>
+          <dd>Magnum photographer whose long project traces the domestic consequences of America's wars: the soldiers who came back, the towns they came back to.</dd>
+        </div>
+        <div>
+          <dt><a href="https://www.curranhatleberg.com/" target="_blank" rel="noopener">Curran Hatleberg</a></dt>
+          <dd><em>Lost Coast</em>: the quiet psychedelia of the American roadside.</dd>
+        </div>
+      </dl>
+
+      <div class="ethno-body">
+        <p>These are not illustrations of decline. They are <strong>the actual map</strong>: the one the strivers in Tier II-A are trying hardest not to look at, because it contains too much useful information about where the ladder actually goes.</p>
+      </div>
+      <blockquote class="ethno-quote">
+        Braddock is <em>everywhere.</em>
+        <cite>LaToya Ruby Frazier · on her two-decade Rust Belt project</cite>
+      </blockquote>
+      <div class="ethno-further">
+        <span>FURTHER →</span>
+        <a href="https://www.moma.org/calendar/exhibitions/5574" target="_blank" rel="noopener">MoMA: Frazier's "Monuments of Solidarity" retrospective</a>
+        <a href="https://placesjournal.org/article/go-tell-it-latoya-ruby-frazier-moma-monuments-of-solidarity/" target="_blank" rel="noopener">Places Journal: Jeffrey Kastner on Frazier at MoMA</a>
+        <a href="https://www.altaonline.com/culture/art/a37417425/matt-black-american-geography/" target="_blank" rel="noopener">Alta Journal: Matt Black photographs the ubiquity of poverty</a>
+        <a href="https://www.documentjournal.com/2021/05/to-photographer-bryan-schutmaat-the-american-west-is-a-boundless-muse/" target="_blank" rel="noopener">Document Journal: Bryan Schutmaat on the American West</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEW INSTRUMENTS FOR THE CHALLENGED MIDDLE -->
+<section class="instruments-scene" id="instruments">
+  <div class="instruments-header">
+    <span class="section-num">§ 05 — NEW INSTRUMENTS FOR THE CHALLENGED MIDDLE</span>
+    <h2>Two halves of the <em>same machine.</em></h2>
+    <p class="instruments-intro">The challenged middle has produced two financial novelties in recent years. One sits at checkout. The other sits inside sport, politics, and the news. One helps households preserve a way of life that has become harder to afford. The other offers the hope of speculating their way out of the same bind. They look different. In substance, they are closely related.</p>
+
+    <blockquote class="ethno-quote">
+      When people start treating the economy like a game, it's a sign that the traditional ways of winning no longer feel real.
+      <cite>Kyla Scanlon · The Wall Street Journal · December 2025</cite>
+    </blockquote>
+  </div>
+
+  <div class="instrument-block">
+    <div class="instrument-label">I. Nobody wants to go without.</div>
+    <p>Credit cards belong to an older consumer order. They assume a household with a future that is, at some level, legible. Buy-now-pay-later belongs to a shorter horizon. By 2023, six large providers were originating 335.8 million loans worth $45.2 billion to 53.6 million users. In 2024, 15% of American adults used BNPL, and nearly a quarter of those users paid late. Over the 2025 holiday season alone, BNPL financed a record $20 billion of online purchases. This is no longer a quirky fintech convenience. It is becoming part of the plumbing of everyday consumption.</p>
+
+    <p>Its first innovation is temporal. Its second is semantic. It is framed not as debt, but as convenience. Not a loan, but a payment plan. It arrives stripped of the old moral weight of borrowing. It feels administrative, almost innocent, like a way of moving numbers around rather than a way of taking on risk.</p>
+
+    <p>That is precisely the point. People do not want to go without. The trip still has to happen. Dinner still has to be seen to happen. The visible tokens of middle-class life may be harder to finance than they were, but they are no less useful as social proof. In a status economy, abstention can look less like prudence than decline.</p>
+
+    <p>Buy-now-pay-later is therefore more than a credit product. It is a device for preserving appearances. It helps households maintain the <em>external geometry</em> of a life whose internal sums no longer quite work.</p>
+  </div>
+
+  <div class="instrument-block">
+    <div class="instrument-label">II. Turn every event into a trade.</div>
+    <p>The second novelty answers the same pressure in a different register. If buy-now-pay-later helps consumers absorb the strain, gambling platforms offer the possibility of escaping it.</p>
+
+    <p>The growth has been rapid. Americans legally wagered $166.94 billion on sports in 2025. Prediction markets have expanded faster still. Industry estimates put total trading volume at about $63.5 billion in 2025, up sharply from the year before, while Kalshi says it handled more than $1 billion of trades on Super Bowl Sunday alone. A football game becomes a tradeable event. An election becomes a position. Increasingly, so does a geopolitical crisis.</p>
+
+    <p>This is speculation made ordinary. When the conventional routes to security feel slower and less dependable, risk-taking acquires a fresh respectability. It can be dressed up as agility, realism or initiative. It looks less like gambling than like refusing to be left behind.</p>
+
+    <p>There is a deeper shift under way. Finance no longer confines itself to firms, assets, and commodities. It is spreading into events themselves. As Derek Thompson put it, <em>"every event on the planet has a price."</em> Reality is broken into outcomes, assigned probabilities, and offered to the public. Observation gives way to participation, and participation increasingly means staking money.</p>
+  </div>
+
+  <div class="instrument-block instrument-postscript">
+    <div class="instrument-label">Postscript: the house remains.</div>
+    <p>Prediction markets are often described as peer-to-peer. The phrase suggests neutrality. It should not. Every gain still comes from somebody else's loss. And where knowledge is uneven, so are the winnings.</p>
+
+    <p>That is what makes the model both ingenious and faintly grubby. In January 2026, an anonymous Polymarket account reportedly turned roughly $30,000 into more than $400,000 betting on Nicolás Maduro's removal shortly before his capture. The house has not disappeared. It has merely changed shape.</p>
+  </div>
+
+  <div class="ethno-further">
+    <span>FURTHER →</span>
+    <a href="https://kyla.substack.com/p/gen-z-and-financial-nihilism" target="_blank" rel="noopener">Kyla Scanlon: Gen Z and Financial Nihilism</a>
+    <a href="https://www.derekthompson.org/p/we-havent-seen-the-worst-of-what" target="_blank" rel="noopener">Derek Thompson: We Haven't Seen the Worst of Gambling and Prediction Markets</a>
+    <a href="https://www.consumerfinance.gov/data-research/research-reports/the-buy-now-pay-later-market/" target="_blank" rel="noopener">CFPB: The Buy Now, Pay Later Market (Dec 2025 data spotlight)</a>
+  </div>
+</section>
+
+<!-- THINKERS -->
+<section class="thinkers-scene" id="thinkers">
+  <div class="thinkers-header">
+    <span class="section-num">§ 06 — THE THEORY</span>
+    <h2>Seven frameworks that name the <em>thing we're in.</em></h2>
+    <div class="prose" style="margin-top: 2rem;">
+      <p>The fracture is not a new observation. A small set of economists and cultural theorists have been charting it for years. Their work provides the load-bearing beams for any serious reading of the present moment.</p>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">i.</div>
+    <div>
+      <p class="thinker-idea"><em>Severed lifeline.</em> Confidence bifurcated along asset lines. The two halves now decide from opposite realities.</p>
+      <p class="thinker-context">The people at the top of the K feel certainty and power. The people at the bottom feel a stacked, cumulative vulnerability. Neither half can reliably understand the other, and together they produce the incoherent politics and incoherent consumer behavior of the present moment. As of late 2025, the preferred metaphor has shifted from a stable K into something more like a top-heavy Jenga tower: impressive looking, and one removed block from collapse.</p>
+      <p class="thinker-bio">Behavioral economist at William &amp; Mary. Built the "confidence-driven decision-making" framework now used by investors and central bankers to read consumer sentiment as a leading indicator.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Peter Atwater</span>
+        <span class="thinker-reveal-source">The K-Shaped Economy · William &amp; Mary</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">ii.</div>
+    <div>
+      <p class="thinker-idea"><em>Cancelled future.</em> Every brand move in 2026 is haunted by it. A culture that cannot imagine forward motion defends itself by curating its own past.</p>
+      <p class="thinker-context">The endless reboots. The cottagecore revivals. The political rhetoric of return to an imagined golden era. None of these are trends; they are symptoms. A civilization that has lost its forward motion defends itself by curating its own past. The phrase for this is "hauntology": the present being haunted by futures that never arrived.</p>
+      <p class="thinker-bio">British cultural theorist and blogger (1968–2017). His short book <em>Capitalist Realism</em> argued that our inability to imagine a different economic order is itself the most disabling feature of the current one.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Mark Fisher</span>
+        <span class="thinker-reveal-source">Capitalist Realism · 2009</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">iii.</div>
+    <div>
+      <p class="thinker-idea"><em>Performed normal.</em> People keep enacting the rituals of an order whose underlying conditions have already collapsed.</p>
+      <p class="thinker-context">Yurchak studied the late Soviet generation and found a paradox. The system was experienced by the people inside it as simultaneously eternal and stagnating, and the eventual collapse felt to them both completely unexpected and completely unsurprising. His name for the condition was <em>hypernormalization</em>. It is the moment when the rituals of an order continue long after the underlying belief in them has dissolved, until the performance becomes the only thing left of the system. The Soviet rituals were ideological. The American ones are consumerist. The mortgage dream, the upward-mobility narrative, the middle-class performance, the feeds and the parties and the open-house photographs are now the load-bearing infrastructure of an economy whose material basis has already cracked. Hypernormalization is what it feels like to live inside that gap.</p>
+      <p class="thinker-bio">Russian-American anthropologist at UC Berkeley, born in Leningrad. Coined "hypernormalization" in his 2005 book on late Soviet society, which won the 2007 Wayne S. Vucinich Book Prize and became one of the most cited recent works on the experience of living inside a slow-motion institutional collapse.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Alexei Yurchak</span>
+        <span class="thinker-reveal-source">Everything Was Forever, Until It Was No More · Princeton, 2005</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">iv.</div>
+    <div>
+      <p class="thinker-idea"><em>Asset fracture.</em> Class is no longer what you earn. It is what you own.</p>
+      <p class="thinker-context">The real fracture runs between those with inherited or appreciated assets (housing, equities, land) and those without, regardless of salary. A high-income renter and a modest-income homeowner are not in the same economic universe. This is why a software engineer on $180,000 can still feel poor, and why their landlord's landlord does not.</p>
+      <p class="thinker-bio">Three sociologists at the universities of Sydney and Melbourne. Their 2020 book extended Piketty's wealth-concentration argument into a sharper claim: class is no longer about labor at all.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Adkins, Cooper &amp; Konings</span>
+        <span class="thinker-reveal-source">The Asset Economy · Polity, 2020</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">v.</div>
+    <div>
+      <p class="thinker-idea"><em>A new kind of feudalism.</em> The top of the K is not getting rich. It is building fiefs, and the rest of us are becoming its tenants.</p>
+      <p class="thinker-context">A tiny class of "cloud lords" owns the platforms, the models, the infrastructure, and extracts rent from everyone else who needs to use them to live or work. The top 0.1%'s move into land, water rights, longevity tech, and proprietary AI is not a lifestyle choice. It is the construction of a post-capital political order in which the rest of us are tenants on their land, users of their clouds, labor in their loops.</p>
+      <p class="thinker-bio">Economist, former Greek finance minister during the 2015 debt crisis. Argues that the 2008 crash was the moment platform capital overtook industrial capital, and that we have been living in the aftermath ever since.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Yanis Varoufakis</span>
+        <span class="thinker-reveal-source">Technofeudalism · 2023</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">vi.</div>
+    <div>
+      <p class="thinker-idea"><em>Technology does not always lift wages.</em> "Technology lifts all wages" is a selective reading of one exceptional century. The AI dread is not a panic.</p>
+      <p class="thinker-context">The story we tell ourselves about technology, that new tools always lift wages in the long run, is a generalization from one unusual century. What decides whether a new technology lifts wages or concentrates them is not the technology. It is the politics around it. The cotton gin and the power loom were not destiny. They were choices, made by people who benefited from the outcome. The current AI wave is arriving into a political vacuum where no such choices are being made on behalf of the people it will displace. The fear showing up in the polls is not panic. It is the reasonable response of people who have read their history and know how this story usually ends.</p>
+      <p class="thinker-bio">MIT economists. Acemoglu won the 2024 Nobel Prize in Economics. <em>Power and Progress</em> is the sharpest recent account of why the "technology lifts all boats" story is historically rare rather than automatic.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Daron Acemoglu &amp; Simon Johnson</span>
+        <span class="thinker-reveal-source">Power and Progress · 2023</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thinker-row">
+    <div class="thinker-numeral">vii.</div>
+    <div>
+      <p class="thinker-idea"><em>The revenge of the abandoned places.</em> Geographic inequality is the mechanism by which concentration becomes politics. The places the economy has left behind do not stay quiet.</p>
+      <p class="thinker-context">Abandonment is not a side effect of economic concentration. It is how concentration becomes politics. When a region is told that its skills and its industries and its way of life are obsolete, the people in that region do not respond with gratitude for the explanation. They vote for anyone who promises to tear the explanation down. That is the through-line connecting Braddock, Clacton-on-Sea, and rural Saxony, and it is what most analyses of why politics has gotten like this are still missing.</p>
+      <p class="thinker-bio">Economic geographer at the London School of Economics. His 2018 essay "The revenge of the places that don't matter" is the most cited short read connecting regional abandonment to political backlash.</p>
+      <div class="thinker-reveal">
+        <span class="thinker-reveal-name">Andrés Rodríguez-Pose</span>
+        <span class="thinker-reveal-source">The Revenge of the Places That Don't Matter · 2018</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KINTSUGI INTERSTITIAL — the hinge from fracture to mending -->
+<aside class="kintsugi" aria-label="Interstitial: from fracture to mending">
+  <div class="kintsugi-inner">
+
+    <div class="kintsugi-header-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4.5 9.5c0 4.7 3.4 8 7.5 8s7.5-3.3 7.5-8"/>
+        <path d="M4.5 9.5c2.2-1.8 4.7-2.7 7.5-2.7s5.3.9 7.5 2.7"/>
+        <path d="M8 12l1.8 1.3 1.7-2 2.1 2.5 2-1.5"/>
+        <path d="M7.5 18.5h9"/>
+      </svg>
+    </div>
+
+    <div class="kintsugi-bowl" aria-hidden="true">
+      <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Rim of the bowl, drawn as a shallow ellipse arc to give it dimension -->
+        <path class="bowl-rim" d="M 30 30 Q 100 10 170 30" fill="none"/>
+        <!-- Body of the bowl, a soft U-curve from rim to rim -->
+        <path class="bowl-body" d="M 30 30 Q 35 95 100 95 Q 165 95 170 30" fill="none"/>
+        <!-- The gold seam: an irregular horizontal break across the bowl -->
+        <path class="bowl-seam" d="M 32 58 L 52 62 L 68 56 L 88 64 L 108 59 L 128 65 L 148 58 L 168 61" fill="none"/>
+      </svg>
+    </div>
+
+    <p>In kintsugi, a broken bowl is repaired with lacquer mixed with gold. The crack is not hidden. It is marked.</p>
+
+    <p>America's consumer order is cracking too. The preceding sections described the break, the tiers beneath it, and the financial devices the challenged middle now uses to keep ordinary life going. What follows is not a plan to restore the old arrangement. <span class="kintsugi-mark">The bowl is not coming back.</span> It is an attempt to identify the new seams already forming — in households, cooperatives, neighborhoods, and informal networks — and to ask what companies would have to do to work with them rather than against them.</p>
+
+    <div class="kintsugi-divider" aria-hidden="true"></div>
+
+    <div class="kintsugi-case">
+      <div class="kintsugi-mountains" aria-hidden="true">
+        <svg viewBox="0 0 40 20" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 2 18 L 10 10 L 15 14 L 21 5 L 27 13 L 32 9 L 38 18"/>
+          <circle class="mountain-village" cx="6" cy="17" r="0.7"/>
+          <circle class="mountain-village" cx="17" cy="14" r="0.7"/>
+          <circle class="mountain-village" cx="25" cy="13" r="0.7"/>
+          <circle class="mountain-village" cx="35" cy="17" r="0.7"/>
+        </svg>
+      </div>
+      <span class="kintsugi-case-eyebrow">One place that has already done this work</span>
+
+      <p><strong class="kintsugi-beat">The crisis.</strong> Arrasate-Mondragón is a small town in Spain's Basque country. After the civil war it was poor, repressed, and isolated. In 1941 a young Catholic priest, José María Arizmendiarrieta, arrived to teach at the local technical school. He had himself been sentenced to death during the war and survived only because his papers were misfiled. He concluded that the arrangements that had broken the region could not rebuild it.</p>
+
+      <p><strong class="kintsugi-beat">The process.</strong> In 1956, Arizmendiarrieta and five former students opened a factory making paraffin stoves. It was not owned by outside capital. It was owned by the people who worked in it. Decisions were taken democratically. Profits were reinvested in the business and the surrounding community. The aim was not to maximize returns to capital. It was to create durable livelihoods.</p>
+
+      <p><strong class="kintsugi-beat">The structure.</strong> That factory became the Mondragón Corporation: roughly 70,000 worker-owners across more than eighty cooperatives, with their own bank, university, research centers, and social security arrangements. The federation makes auto parts for European car manufacturers, machine tools for factories around the world, and the gas valves in thirty thousand stoves a day; it runs Eroski, one of Spain's largest supermarket chains, and operates in more than a hundred and twenty countries. Executive pay in each cooperative is capped at roughly six times the lowest salary inside it, compared with the much larger ratios typical in American corporations. When one cooperative struggles, others absorb its workers. This is not a commune. It is a federation of industrial firms that has competed globally for nearly seventy years while keeping members as owners rather than treating them as inputs.</p>
+
+      <p><strong class="kintsugi-beat">What now.</strong> Mondragón has survived dictatorship, democratization, recession, the 2008 financial crisis, the pandemic, and the 2013 collapse of Fagor Electrodomésticos, once its flagship business — which the federation absorbed by moving most of Fagor's workers into other cooperatives rather than laying them off. It is not a utopia. It has failed in places and struggled in others. But it proves that institutions can be built around the people inside them and still survive in the same markets as everyone else. The principles are not mystical. They are <em>portable.</em></p>
+    </div>
+
+  </div>
+</aside>
+
+<!-- THE PLAN -->
+<section class="plan-scene" id="plan">
+  <div class="plan-hero" aria-hidden="true">
+    <svg viewBox="0 0 1100 100" preserveAspectRatio="xMidYMid meet">
+      <!-- The line from §01, now under repair. No milestones — this is pure metaphor.
+           The axis is the broken lifeline; the gold seam is the kintsugi repair. -->
+      <line x1="60" y1="55" x2="1040" y2="55" class="lifeline-axis"/>
+
+      <g>
+        <path class="kintsugi-seam" d="M 60 55 L 105 51 L 170 61 L 209 48 L 256 59 L 311 46 L 347 62 L 384 50 L 445 61 L 497 47 L 535 63 L 581 48 L 634 60 L 670 48 L 734 62 L 785 48 L 826 60 L 862 49 L 899 60 L 947 48 L 995 62 L 1032 49 L 1040 55"/>
+
+        <path class="kintsugi-splinter" d="M 256 59 L 259 68 L 254 75"/>
+        <path class="kintsugi-splinter" d="M 445 61 L 447 70 L 442 77"/>
+        <path class="kintsugi-splinter" d="M 581 48 L 583 39 L 578 32"/>
+        <path class="kintsugi-splinter" d="M 785 48 L 783 39 L 777 32"/>
+        <path class="kintsugi-splinter" d="M 947 48 L 949 39 L 944 32"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="plan-header">
+    <span class="section-num">§ 07 — THE UN-BLINKERING</span>
+    <h2>How to draw the line <em>and then keep it.</em></h2>
+    <div class="prose" style="margin-top: 2rem;">
+      <p>Mondragón matters not because it offers a sentimental alternative to capitalism, but because it shows that institutions can be organized differently when the old social contract is breaking down. The question for brands is what follows if a company decides not merely to sell into the fracture, but to operate in ways that make the people on the other side of it more viable.</p>
+      <p>A business can prosper for a while by serving the affluent. An economy cannot. The old consumer machine depended on a middle broad enough, solvent enough, and confident enough to carry demand at scale. That middle has weakened. Spending power has concentrated at the top. Gains at the top still show up in the aggregate numbers, but they no longer move through the economy the way middle-class gains once did.</p>
+      <p>What appears in the aggregate as resilience is often something narrower and more brittle: a smaller group of households spending hard while the rest become more indebted, more cautious, and more price-sensitive. Companies can respond by moving upmarket and calling it strategy. In isolation it can even work. In aggregate it does not. The result is a shrinking demand base, fiercer competition for the same affluent customer, and a market held together by credit, subsidy, and denial.</p>
+      <p>The question is not whether companies should help repair the fracture out of conscience. It is whether they expect to keep operating in a country that still contains enough customers to support durable growth.</p>
+      <p>What follows is a five-step process any leadership team could begin next month. It is neither quick nor cheap, and a decision is not real until a company begins to do the things it requires.</p>
+    </div>
+  </div>
+
+  <div class="plan-preview" aria-label="The five steps at a glance">
+    <div class="plan-preview-item">
+      <div class="plan-preview-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 18 L20 18"/>
+          <path d="M7 15 L10 12"/>
+          <circle cx="6" cy="16" r="0.3" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="plan-preview-num">i.</div>
+      <div class="plan-preview-label">The Decision</div>
+    </div>
+
+    <div class="plan-preview-item">
+      <div class="plan-preview-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 10 a3 3 0 0 1 3 -3 h4 a3 3 0 0 1 3 3 v1 a3 3 0 0 1 -3 3 h-1 l-3 2.5 v-2.5 h-0 a3 3 0 0 1 -3 -3 z"/>
+          <path d="M11 15 a3 3 0 0 0 3 3 h1 l3 2.5 v-2.5 h0 a3 3 0 0 0 3 -3 v-1 a3 3 0 0 0 -3 -3"/>
+        </svg>
+      </div>
+      <div class="plan-preview-num">ii.</div>
+      <div class="plan-preview-label">Camp Reality</div>
+    </div>
+
+    <div class="plan-preview-item">
+      <div class="plan-preview-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="8"/>
+          <circle cx="12" cy="12" r="3.5"/>
+        </svg>
+      </div>
+      <div class="plan-preview-num">iii.</div>
+      <div class="plan-preview-label">The Questions Session</div>
+    </div>
+
+    <div class="plan-preview-item">
+      <div class="plan-preview-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <rect x="6" y="4" width="12" height="16" rx="1"/>
+          <path d="M9 3 h6 v2 h-6 z"/>
+          <path d="M9 10 l2 2 l4 -4"/>
+          <path d="M9 16 h6"/>
+        </svg>
+      </div>
+      <div class="plan-preview-num">iv.</div>
+      <div class="plan-preview-label">The Plan</div>
+    </div>
+
+    <div class="plan-preview-item">
+      <div class="plan-preview-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 12 a8 8 0 1 1 -2.5 -5.8"/>
+          <path d="M20 4 v4 h-4"/>
+        </svg>
+      </div>
+      <div class="plan-preview-num">v.</div>
+      <div class="plan-preview-label">The Turn</div>
+    </div>
+  </div>
+
+  <div class="plan-list">
+
+    <div class="plan-item">
+      <div class="plan-num"></div>
+      <div>
+        <div class="plan-icon-slot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 18 L20 18"/>
+            <path d="M7 15 L10 12"/>
+            <circle cx="6" cy="16" r="0.3" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <h3 class="plan-title"><em>The Decision.</em> Draw the line.</h3>
+        <p class="plan-promise">Commit, aloud and in writing, to operating differently from next quarter.</p>
+        <p class="plan-context">Before anything else happens, the leadership team names the commitment in a room, in front of one another, and writes it down. Without that, everything that follows is theater.</p>
+        <div class="plan-sublist-header">The commitment has three clauses</div>
+        <ul class="plan-bullets">
+          <li>We will stop <strong>extracting</strong> from the people we serve.</li>
+          <li>We will stop <strong>abandoning</strong> them.</li>
+          <li>We will try instead to be <strong>regenerative</strong> — leaving the people, places, and relationships our business touches in better condition than we found them.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="plan-item">
+      <div class="plan-num"></div>
+      <div>
+        <div class="plan-icon-slot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 10 a3 3 0 0 1 3 -3 h4 a3 3 0 0 1 3 3 v1 a3 3 0 0 1 -3 3 h-1 l-3 2.5 v-2.5 h-0 a3 3 0 0 1 -3 -3 z"/>
+            <path d="M11 15 a3 3 0 0 0 3 3 h1 l3 2.5 v-2.5 h0 a3 3 0 0 0 3 -3 v-1 a3 3 0 0 0 -3 -3"/>
+          </svg>
+        </div>
+        <h3 class="plan-title"><em>Camp Reality.</em> Thirty days of forensic fieldwork.</h3>
+        <p class="plan-promise">Move the working office to a small town for a month and listen properly.</p>
+        <p class="plan-context">This cannot be done remotely and it cannot be done on a two-day visit. Pick a town nobody on the team would otherwise choose — Fulton, Kentucky; Marion, Ohio; Pittsfield, Maine — rent a storefront on the main street, and work from there for thirty days. Relocation is the precondition. Listening is the work.</p>
+        <div class="plan-sublist-header">What you actually do</div>
+        <ul class="plan-bullets">
+          <li>Host backyard barbecues and invite the neighbors.</li>
+          <li>Buy the mayor a coffee. Talk to the pastor, the union representative, the Dollar General manager, the diner owner, the teenager on the 2 a.m. shift at the gas station.</li>
+          <li>Sit in the bleachers at the Friday-night football game. Attend the city council meeting. Volunteer at the food bank.</li>
+          <li>Ask the high school quarterback what he wants to do after graduation, and whether he thinks he can do it here.</li>
+          <li>No surveys. No focus groups. Long conversations, the sort that happen only when the person opposite can see that you are not leaving on Friday.</li>
+        </ul>
+        <div class="plan-meta-question">The question underneath all of it is simple: who keeps this place together, what keeps it together, and why do the people who remain choose to stay?</div>
+        <p class="plan-context">You are not cataloging the town. You are identifying the architecture of mutual obligation that holds it up, because that architecture is what your brand is about to decide whether to support or erode.</p>
+      </div>
+    </div>
+
+    <div class="plan-item">
+      <div class="plan-num"></div>
+      <div>
+        <div class="plan-icon-slot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="8"/>
+            <circle cx="12" cy="12" r="3.5"/>
+          </svg>
+        </div>
+        <h3 class="plan-title"><em>The Questions Session.</em> What do we owe these people, and what do we need to become to deliver it?</h3>
+        <p class="plan-promise">Two days in a room, turning what you saw into what the business must change.</p>
+        <p class="plan-context">The week after Camp Reality ends, everyone who went meets for two days. No presentations. No travelogue. No deck. Two days of one conversation, asked from a hundred angles. The session produces two lists.</p>
+        <div class="plan-sublist-header">List one — What our customers need from us that we are not currently providing</div>
+        <ul class="plan-bullets">
+          <li>A product that fits a life we had not properly understood.</li>
+          <li>A price that matches an income we had modeled wrongly.</li>
+          <li>A footprint that reaches where people actually live.</li>
+          <li>A voice that speaks the language they actually use.</li>
+          <li>A service relationship that appears in the ways they recognize trust.</li>
+        </ul>
+        <div class="plan-sublist-header">List two — What our brand has to become</div>
+        <p class="plan-context">This is the harder list, and the one that matters more.</p>
+        <ul class="plan-bullets">
+          <li>Which parts of the current customer relationship are <em>extractive</em>, and what would the regenerative version look like?</li>
+          <li>Which metrics reward us for taking more, and which would reward us for leaving people better off?</li>
+          <li>Which decisions treat the customer as something to be <em>harvested</em>, and what would those decisions look like if the customer were treated instead as a participant in the enterprise?</li>
+        </ul>
+        <p class="plan-context">By the end of day two, both lists are prioritized. The first is for action next quarter. The second becomes the company's long-range direction.</p>
+      </div>
+    </div>
+
+    <div class="plan-item">
+      <div class="plan-num"></div>
+      <div>
+        <div class="plan-icon-slot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="12" height="16" rx="1"/>
+            <path d="M9 3 h6 v2 h-6 z"/>
+            <path d="M9 10 l2 2 l4 -4"/>
+            <path d="M9 16 h6"/>
+          </svg>
+        </div>
+        <h3 class="plan-title"><em>The Plan.</em> Assign every commitment a method, an owner and a deadline.</h3>
+        <p class="plan-context">What can you pilot right away? Form the teams and start. Where do you need deeper answers before you can act? Build a plan to get them, and make sure those answers are rich enough to carry the feelings and learnings you brought back from the Camp.</p>
+        <p class="plan-context">This is how the process of reconnection begins. You are delivering on the commitment and taking the first real steps to change things.</p>
+      </div>
+    </div>
+
+    <div class="plan-item">
+      <div class="plan-num"></div>
+      <div>
+        <div class="plan-icon-slot" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 12 a8 8 0 1 1 -2.5 -5.8"/>
+            <path d="M20 4 v4 h-4"/>
+          </svg>
+        </div>
+        <h3 class="plan-title"><em>The Turn.</em> Use the answers to rebuild the relationship.</h3>
+        <p class="plan-promise">Act on the operational answers immediately. Take the time to get to the answers to the deep questions. Then do it again.</p>
+        <p class="plan-context">Operational changes begin at once. Research takes longer. The answers come back slowly, in fragments, and some will contradict what the organization thought it knew. Then the organization uses them.</p>
+        <div class="plan-sublist-header">Each answer becomes a decision</div>
+        <ul class="plan-bullets">
+          <li>A product changes because the company finally understands what the customer needs.</li>
+          <li>A price changes because it finally understands what the customer can afford.</li>
+          <li>A hire changes because it now sees which voices are missing from the room.</li>
+          <li>A metric changes because the old one rewarded the wrong behavior.</li>
+          <li>A policy changes because the old one treated the customer as a resource rather than as a party to the relationship.</li>
+        </ul>
+        <p class="plan-context">None of these shifts is dramatic on its own. Taken together, over eighteen months, they amount to a different operating logic. That is how a company stops extracting and starts becoming regenerative. It is the Basque lesson translated into brand terms.</p>
+        <p class="plan-context">Then the cycle begins again. Another Camp Reality six months later, in a different town, with a different leader. Another Questions Session. Another Plan. Another Turn. This is not a project with an end date. It is how the company runs from the day it drew the line.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION-BY-SECTION PRIMER (appendix, between §07 and §08) -->
+<section class="reading-scene" id="reading">
+  <div class="reading-header">
+    <span class="section-num">Appendix · Section-by-Section Primer</span>
+    <h2>The short shelf before <em>the real work begins.</em></h2>
+    <div class="prose" style="margin-top: 2rem;">
+      <p>Nineteen readings for the team about to run Camp Reality. Short by design, because the thirty days ahead will teach you more than any reading list can. What these entries do is sharpen the questions you arrive with.</p>
+      <p style="margin-top: 1.5rem;">The sections are ordered as an argument. Mondragón first, because a seventy-year-old working alternative deserves to be on the table before any diagnosis. Then what ordinary Americans are already quietly leaving. Then the economic case against the K shape. Then the American institutions already operating by a different logic. Then the craft of listening, last, because that is what you take with you into the camp.</p>
+      <p style="margin-top: 1.5rem;">Most entries are articles you can finish over a coffee. A few are books worth the longer sit. The annotations are brief. The links do the rest of the work.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 1 · MONDRAGÓN AT DEPTH -->
+  <div class="reading-header" style="margin-top: 4rem;">
+    <h3 style="font-family: var(--serif, serif); font-size: 1.75rem; font-weight: 400; margin-bottom: 0.5rem;">1 · Mondragón at depth</h3>
+    <div class="prose"><p><em>Four readings for the team that wants to go beyond the outline.</em></p></div>
+  </div>
+
+  <div class="reading-list">
+
+    <div class="reading-item">
+      <div class="reading-num">01</div>
+      <div>
+        <div class="reading-title">Making Mondragón: The Growth and Dynamics of the Worker Cooperative Complex</div>
+        <div class="reading-author">William Foote Whyte &amp; Kathleen King Whyte · Cornell/ILR Press · 1988, second edition 1991</div>
+        <div class="reading-desc">The canonical historical account of the Basque cooperative federation, written by the sociologist couple who lived inside it.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">02</div>
+      <div>
+        <div class="reading-title"><a href="https://www.corporate-rebels.com/blog/lessons-from-the-mondragon-cooperative-movement" target="_blank" rel="noopener">Lessons from the Mondragón Cooperative Movement ↗</a></div>
+        <div class="reading-author">Marc Peeters &amp; Roel Schouteten · Corporate Rebels · May 2024</div>
+        <div class="reading-desc">A recent analytical piece whose closing advice is exactly the right register, "not to copy, but to understand."</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">03</div>
+      <div>
+        <div class="reading-title"><a href="https://www.thenews.coop/new-trouble-for-mondragon-as-two-industrial-co-ops-leave-the-fold/" target="_blank" rel="noopener">New trouble for Mondragon as two industrial co-ops leave the fold ↗</a></div>
+        <div class="reading-author">Anca Voinea · Co-operative News · January 2023</div>
+        <div class="reading-desc">The 2022 Orona and ULMA departures, 11,000 workers and 15% of sales, honestly reported from within the movement.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">04</div>
+      <div>
+        <div class="reading-title"><a href="https://shelterforce.org/2021/03/09/despite-a-rocky-start-cleveland-model-for-worker-co-ops-stands-test-of-time/" target="_blank" rel="noopener">Cleveland Model for Worker Cooperative Stands Test of Time ↗</a></div>
+        <div class="reading-author">Lillian M. Ortiz · Shelterforce · April 2021</div>
+        <div class="reading-desc">Evergreen Cooperatives after a decade, more modest than the Mondragón ambition but durable and still growing.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 2 · CONSUMER FATIGUE AND EXIT -->
+  <div class="reading-header" style="margin-top: 4rem;">
+    <h3 style="font-family: var(--serif, serif); font-size: 1.75rem; font-weight: 400; margin-bottom: 0.5rem;">2 · Consumer fatigue and exit</h3>
+    <div class="prose"><p><em>Three readings on the quiet mass opt-out.</em></p></div>
+  </div>
+
+  <div class="reading-list">
+
+    <div class="reading-item">
+      <div class="reading-num">05</div>
+      <div>
+        <div class="reading-title"><a href="https://www.forrester.com/blogs/cx-index-2025-results/" target="_blank" rel="noopener">Customer Experience Quality in the US Falls to An(other) All-Time Low ↗</a></div>
+        <div class="reading-author">Pete Jacques · Forrester · June 2025</div>
+        <div class="reading-desc">Forrester's fourth consecutive year of US CX decline. 25% of brands losing, only 7% improving.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">06</div>
+      <div>
+        <div class="reading-title"><a href="https://us.macmillan.com/books/9780374619329/enshittification/" target="_blank" rel="noopener">Enshittification: Why Everything Suddenly Got Worse and What to Do About It ↗</a></div>
+        <div class="reading-author">Cory Doctorow · MCD / Farrar Straus Giroux · October 2025</div>
+        <div class="reading-desc">The 352-page diagnosis of the mechanism, a Financial Times Business Book of the Year longlist title.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">07</div>
+      <div>
+        <div class="reading-title"><a href="https://www.cbsnews.com/news/aca-health-subsidies-insurance-prices/" target="_blank" rel="noopener">2026 price hikes hit ACA health insurance plans as subsidies expire for millions of Americans ↗</a></div>
+        <div class="reading-author">CBS News · January 2, 2026</div>
+        <div class="reading-desc">Subsidized ACA enrollees are seeing premium costs rise 114% on average. Small business owners and the self-employed bear the brunt.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 3 · THE MISGUIDED K-SHAPE STRATEGY -->
+  <div class="reading-header" style="margin-top: 4rem;">
+    <h3 style="font-family: var(--serif, serif); font-size: 1.75rem; font-weight: 400; margin-bottom: 0.5rem;">3 · The misguided K-shape strategy</h3>
+    <div class="prose"><p><em>The economic case against the retreat upmarket.</em></p></div>
+  </div>
+
+  <div class="reading-list">
+
+    <div class="reading-item">
+      <div class="reading-num">08</div>
+      <div>
+        <div class="reading-title"><a href="https://prospect.org/2025/12/01/premiumization-plutonomy-middle-class-spending-gilded-age/" target="_blank" rel="noopener">Selling the Poor on Spending Like They're Rich ↗</a></div>
+        <div class="reading-author">Emma Janssen · American Prospect · December 2025</div>
+        <div class="reading-desc">The sharpest recent critique of the premiumization playbook as historically repetitive and strategically wrong.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">09</div>
+      <div>
+        <div class="reading-title"><a href="https://fortune.com/2025/09/17/economy-reliant-on-wealthy-consumer-moodys-consumer-spending/" target="_blank" rel="noopener">The economy's prospects are reliant on the "fortunes of the well-to-do" ↗</a></div>
+        <div class="reading-author">Mark Zandi (Moody's) in Fortune · September 2025</div>
+        <div class="reading-desc">Moody's chief economist: top 10% now drives 49.2% of consumer spending, economy "tethered" to whether they keep spending.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 4 · RECONNECTED ENTERPRISES -->
+  <div class="reading-header" style="margin-top: 4rem;">
+    <h3 style="font-family: var(--serif, serif); font-size: 1.75rem; font-weight: 400; margin-bottom: 0.5rem;">4 · Reconnected enterprises</h3>
+    <div class="prose"><p><em>Institutions already operating by a different logic.</em></p></div>
+  </div>
+
+  <div class="reading-list">
+
+    <div class="reading-item">
+      <div class="reading-num">10</div>
+      <div>
+        <div class="reading-title"><a href="https://www.modernretail.co/marketing/its-the-best-grocery-store-what-makes-texas-chain-h-e-b-such-a-fan-favorite/" target="_blank" rel="noopener">"It's the best grocery store": What makes Texas chain H-E-B such a fan favorite ↗</a></div>
+        <div class="reading-author">Modern Retail · August 2025</div>
+        <div class="reading-desc">A Texas regional grocer leaders call "Texas's FEMA," the case marketing professors teach.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">11</div>
+      <div>
+        <div class="reading-title"><a href="https://theshelbyreport.com/2024/08/06/lowes-foods-redefines-traditional-grocery-experience-for-growth-innovation/" target="_blank" rel="noopener">Lowes Foods Redefines Traditional Grocery Experience ↗</a></div>
+        <div class="reading-author">The Shelby Report · August 2024</div>
+        <div class="reading-desc">A family-owned Carolinas chain tailoring each of its 97 stores to its specific neighborhood.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">12</div>
+      <div>
+        <div class="reading-title"><a href="https://faithandleadership.com/high-touch-and-old-school" target="_blank" rel="noopener">High-touch and old-school ↗</a></div>
+        <div class="reading-author">Chris Richter · Faith and Leadership · September 2011</div>
+        <div class="reading-desc">Latino Community Credit Union in Durham, founded after a wave of robberies targeting unbanked immigrants.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">13</div>
+      <div>
+        <div class="reading-title"><a href="https://www.ncbi.nlm.nih.gov/books/NBK605599/" target="_blank" rel="noopener">Prioritizing Whole Person and Whole Population Health: The Nuka System of Care ↗</a></div>
+        <div class="reading-author">National Academy of Medicine · 2024</div>
+        <div class="reading-desc">Alaska Native customer-owners rebuilt their healthcare from the inside. ER visits fell 42%.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 5 · HOW TO LISTEN -->
+  <div class="reading-header" style="margin-top: 4rem;">
+    <h3 style="font-family: var(--serif, serif); font-size: 1.75rem; font-weight: 400; margin-bottom: 0.5rem;">5 · How to listen</h3>
+    <div class="prose"><p><em>Six pieces on the craft Camp Reality is built to teach.</em></p></div>
+  </div>
+
+  <div class="reading-list">
+
+    <div class="reading-item">
+      <div class="reading-num">14</div>
+      <div>
+        <div class="reading-title"><a href="https://www.interviewmagazine.com/art/eugene-richards" target="_blank" rel="noopener">Eugene Richards and American Poverty ↗</a></div>
+        <div class="reading-author">Petra Mayer · Interview Magazine · October 2016</div>
+        <div class="reading-desc">The photographer of "Below the Line" on the honest baseline: "there's never a time that I'm not intrusive."</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">15</div>
+      <div>
+        <div class="reading-title"><a href="https://www.phillymag.com/news/2025/09/05/fresh-air-terry-gross-oral-history/" target="_blank" rel="noopener">50 Years of Fresh Air: An Oral History ↗</a></div>
+        <div class="reading-author">Philadelphia Magazine · September 2025</div>
+        <div class="reading-desc">Terry Gross and her colleagues on the craft of interviewing, not harvesting quotes but shaping a story.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">16</div>
+      <div>
+        <div class="reading-title"><a href="https://thepublicsradio.org/arts-and-culture/this-is-what-i-was-meant-to-do-dave-isay-reflects-on-a-career-of-storytelling-bridging-americas-political-and-social-divide/" target="_blank" rel="noopener">This is what I was meant to do: Dave Isay reflects on a career of storytelling ↗</a></div>
+        <div class="reading-author">Luis Hernandez · The Public's Radio · August 2024</div>
+        <div class="reading-desc">StoryCorps founder on why the point is not the recording but giving the speaker the chance to be listened to.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">17</div>
+      <div>
+        <div class="reading-title"><a href="https://www.penguinrandomhouse.com/books/566661/dignity-by-chris-arnade/" target="_blank" rel="noopener">Dignity: Seeking Respect in Back Row America ↗</a></div>
+        <div class="reading-author">Chris Arnade · Sentinel/Penguin · 2019</div>
+        <div class="reading-desc">A Wall Street trader walked away and spent years in the places his colleagues said not to go.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">18</div>
+      <div>
+        <div class="reading-title"><a href="https://thenewpress.org/books/strangers-in-their-own-land" target="_blank" rel="noopener">Strangers in Their Own Land: Anger and Mourning on the American Right ↗</a></div>
+        <div class="reading-author">Arlie Russell Hochschild · The New Press · 2016</div>
+        <div class="reading-desc">The Berkeley sociologist's "empathy wall" method, five years in Lake Charles, Louisiana, listening across the biggest imaginable distance.</div>
+      </div>
+    </div>
+
+    <div class="reading-item">
+      <div class="reading-num">19</div>
+      <div>
+        <div class="reading-title"><a href="https://us.macmillan.com/books/9781250297198/yourenotlistening/" target="_blank" rel="noopener">You're Not Listening: What You're Missing and Why It Matters ↗</a></div>
+        <div class="reading-author">Kate Murphy · Celadon Books · 2020</div>
+        <div class="reading-desc">An NYT journalist's book profiling the best listeners she knows, a CIA interrogator, a bartender, a priest.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- CLOSE -->
+<section class="close" id="task">
+  <span class="section-num">§ 08 — THE TASK</span>
+  <h2>You cannot navigate a fractured landscape with a <em>mid-century map.</em></h2>
+  <blockquote class="ethno-quote" style="margin-top: 3rem; margin-bottom: 2.5rem;">
+    To the trends of the consumer society that consumes, on whose blackboard human beings are appraised as things and not as persons, the cooperative system responds.
+    <cite>José María Arizmendiarrieta · founder, Mondragón · 1956</cite>
+  </blockquote>
+  <div class="prose">
+    <p>The bowl is cracked. Putting it back together will require care and humanity.</p>
+    <p style="margin-top: 1.75rem;">The extractors will continue to extract until they run out of runway and their customers reject them. There is only so much enshittification a person can take.</p>
+    <p style="margin-top: 1.75rem;">For the companies that want a different path, the ones that recognize they cannot afford to abandon the people they serve, there is a need for reset. A moment to be honest about the realities people face and will continue to face. A moment to take the time and effort to deeply understand what it is going to take to rebuild the cracked bowl, piece by piece.</p>
+  </div>
+  <div class="signoff">
+    <span>— End of Dispatch</span>
+    <span class="right">2026</span>
+  </div>
+</section>
+
+
+<script>
+  // Progress bar
+  const progress = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = `${(scrolled / max) * 100}%`;
+  }, { passive: true });
+
+  // Generic intersection observer.
+  // Use rootMargin instead of a threshold so that very tall sections
+  // (e.g. .ethno-scene, which is taller than the viewport) still trigger —
+  // a threshold of 0.2 can never be reached when viewport < 0.2 * element height.
+  // This fires as soon as the top of the section crosses 15% up from the viewport bottom.
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { rootMargin: '0px 0px -15% 0px', threshold: 0 });
+
+  document.querySelectorAll('.proof-scene, .tiers-scene, .thinkers-scene, .ethno-scene, .plan-scene, .instruments-scene, .kintsugi').forEach(el => {
+    observer.observe(el);
+  });
+
+  // SECTION NAV: highlight the active link as the reader scrolls
+  const navLinks = document.querySelectorAll('.section-nav a');
+  const navMap = new Map();
+  navLinks.forEach(link => {
+    const id = link.getAttribute('href').slice(1);
+    navMap.set(id, link);
+  });
+
+  const navObserver = new IntersectionObserver((entries) => {
+    // Find the entry most in view
+    const visible = entries
+      .filter(e => e.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+    if (visible.length > 0) {
+      const activeId = visible[0].target.id;
+      navLinks.forEach(link => link.classList.remove('active'));
+      const activeLink = navMap.get(activeId);
+      if (activeLink) activeLink.classList.add('active');
+    }
+  }, { rootMargin: '-20% 0px -60% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] });
+
+  navMap.forEach((link, id) => {
+    const section = document.getElementById(id);
+    if (section) navObserver.observe(section);
+  });
+
+  // LIFELINE: scroll-progress driven (robust, no threshold misses)
+  const lifeline = document.getElementById('lifeline');
+  const milestones = lifeline.querySelectorAll('.lifeline-milestone');
+  const fractureGroup = lifeline.querySelector('.fracture-group');
+  const postFractureEls = lifeline.querySelectorAll('.post-fracture');
+  const lifelineCaption = lifeline.querySelector('.lifeline-caption');
+
+  function updateLifeline() {
+    const rect = lifeline.getBoundingClientRect();
+    const total = rect.height - window.innerHeight;
+    const scrolled = -rect.top;
+    const progress = Math.max(0, Math.min(1, scrolled / total));
+
+    // 0.00 - 0.06: nothing (settle in)
+    // 0.06 - 0.31: milestones 1-5 appear in sequence
+    // 0.31 - 0.50: pause, everything visible
+    // 0.50 - 0.70: fracture tears through, Retirement drifts right
+    // 0.65 - 1.00: caption appears
+
+    milestones.forEach((m, i) => {
+      const threshold = 0.06 + (i * 0.05);
+      if (progress > threshold) {
+        m.classList.add('visible');
+      } else {
+        m.classList.remove('visible');
+      }
+    });
+
+    if (progress > 0.5) {
+      fractureGroup.classList.add('visible');
+      postFractureEls.forEach(el => el.classList.add('drifting'));
+    } else {
+      fractureGroup.classList.remove('visible');
+      postFractureEls.forEach(el => el.classList.remove('drifting'));
+    }
+
+    if (progress > 0.65) {
+      lifelineCaption.classList.add('visible');
+    } else {
+      lifelineCaption.classList.remove('visible');
+    }
+  }
+
+  window.addEventListener('scroll', updateLifeline, { passive: true });
+  window.addEventListener('resize', updateLifeline);
+  updateLifeline();
+</script>
+
+</body>
+</html>
